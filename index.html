@@ -1,0 +1,4368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Хроники Подземелья: Эхо Кристалла</title>
+  <meta name="description" content="Темная фэнтези мини-RPG в стиле Synth-RPG с выбором классов, процедурными векторными чудовищами, динамическим снаряжением, интерактивной картой и случайными событиями." />
+  <meta property="og:title" content="Хроники Подземелья: Эхо Кристалла" />
+  <meta property="og:description" content="Темная фэнтези мини-RPG в стиле Synth-RPG с выбором классов, процедурными векторными чудовищами, динамическим снаряжением, интерактивной картой и случайными событиями." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    /* ==========================================================================
+       1. ДИЗАЙН-СИСТЕМА (Dark Fantasy / Synth-RPG Neon Minimalist)
+       ========================================================================== */
+    :root {
+      --bg-dark: #070b14;
+      --bg-panel: #0f172a;
+      --bg-card: #182238;
+      --bg-card-hover: #1e2d4a;
+      --bg-input: #0b1120;
+
+      --biome-color: #06b6d4;
+      --biome-glow: rgba(6, 182, 212, 0.4);
+      --biome-bg: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.16) 0%, transparent 65%),
+                  radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.95) 0%, #060a12 100%);
+
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.4);
+      --accent-purple: #a855f7;
+      --accent-purple-glow: rgba(168, 85, 247, 0.4);
+      --accent-gold: #f59e0b;
+      --accent-gold-glow: rgba(245, 158, 11, 0.4);
+      --accent-crimson: #f43f5e;
+      --accent-crimson-glow: rgba(244, 63, 94, 0.4);
+      --accent-emerald: #10b981;
+      --accent-ice: #38bdf8;
+      --accent-fire: #f97316;
+
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border-color: rgba(148, 163, 184, 0.16);
+      --border-focus: rgba(6, 182, 212, 0.6);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+      --shadow-neon: 0 0 18px rgba(6, 182, 212, 0.25);
+
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: var(--biome-bg);
+      background-attachment: fixed;
+      background-size: cover;
+      color: var(--text-main);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: background-image 0.6s ease;
+    }
+
+    #ambient-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    #app-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 12px) 16px env(safe-area-inset-bottom, 16px) 16px;
+    }
+
+    /* SVG ИКОНКИ БЕЗ ЭМОДЗИ */
+    .svg-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+    .svg-icon-lg {
+      width: 24px;
+      height: 24px;
+    }
+    .svg-icon-xl {
+      width: 44px;
+      height: 44px;
+    }
+
+    /* ШАПКА */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-crest {
+      width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 0 8px var(--biome-color));
+      animation: crystalPulse 3s ease-in-out infinite;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #f1f5f9, var(--biome-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text span {
+      font-size: 11px;
+      color: var(--text-dim);
+      display: block;
+      margin-top: -1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .floor-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      background: rgba(24, 34, 56, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--biome-color);
+      font-weight: 700;
+    }
+
+    .icon-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .icon-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--biome-color);
+      border-color: var(--biome-color);
+      transform: translateY(-1px);
+    }
+    .icon-btn.playing {
+      color: var(--biome-color);
+      border-color: var(--biome-color);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+    }
+
+    .music-track-pill {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-color);
+      padding: 3px 9px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .music-track-pill:hover {
+      border-color: var(--biome-color);
+      color: var(--biome-color);
+      background: rgba(15, 23, 42, 0.95);
+    }
+    .music-eq-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 11px;
+      transition: opacity 0.3s ease;
+    }
+    .music-bar {
+      width: 2px;
+      background: var(--biome-color);
+      border-radius: 1px;
+      animation: eqBounce 1.2s ease-in-out infinite alternate;
+    }
+    .music-bar:nth-child(2) { animation-delay: 0.3s; }
+    .music-bar:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes eqBounce {
+      0% { height: 2px; }
+      100% { height: 11px; }
+    }
+
+
+    /* БАННЕР БИОМА */
+    .biome-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--biome-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+    }
+    .biome-banner .biome-name {
+      font-weight: 800;
+      color: var(--biome-color);
+    }
+
+    /* HUD ХАРАКТЕРИСТИК */
+    .hero-hud {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hud-bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .hud-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .meter-track {
+      width: 100%;
+      height: 9px;
+      background: rgba(11, 17, 32, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .meter-fill-hp {
+      background: linear-gradient(90deg, #e11d48, #f43f5e);
+      box-shadow: 0 0 10px var(--accent-crimson-glow);
+    }
+    .meter-fill-mp {
+      background: linear-gradient(90deg, #0284c7, #06b6d4);
+      box-shadow: 0 0 10px var(--accent-cyan-glow);
+    }
+
+    .hud-quick-stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      font-size: 12px;
+    }
+
+    .quick-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-muted);
+    }
+    .quick-stat-item strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+    .stat-gold strong { color: var(--accent-gold); }
+    .stat-sp strong { color: var(--accent-purple); }
+
+    /* ЭКРАНЫ */
+    .game-screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      animation: fadeInScreen 0.25s ease-out forwards;
+    }
+    .game-screen.active {
+      display: flex;
+    }
+
+    /* ЭКРАН ВЫБОРА КЛАССА */
+    .class-select-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 6px 0;
+    }
+
+    .class-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      position: relative;
+    }
+    .class-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--biome-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-neon);
+    }
+    .class-card.selected {
+      background: rgba(30, 45, 74, 0.9);
+      border-color: var(--biome-color);
+      box-shadow: 0 0 18px var(--biome-glow);
+    }
+    .class-card.selected::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      border-radius: 4px 0 0 4px;
+      background: var(--biome-color);
+    }
+
+    .class-avatar-box {
+      width: 68px;
+      height: 68px;
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .class-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .class-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .class-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .class-archetype {
+      font-size: 11px;
+      color: var(--biome-color);
+      font-weight: 700;
+    }
+    .class-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+      margin: 2px 0 6px 0;
+    }
+    .class-pips-row {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .class-pips-row span strong {
+      color: var(--text-main);
+    }
+
+    /* ЭКРАН ПРОЛОГА */
+    .story-scroll-card {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: auto 0;
+      backdrop-filter: blur(12px);
+    }
+    .story-header {
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+    .story-header h2 {
+      font-size: 20px;
+      color: #f8fafc;
+      font-weight: 800;
+    }
+    .story-header span {
+      font-size: 12px;
+      color: var(--biome-color);
+      font-weight: 700;
+    }
+    .story-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .story-body p {
+      text-indent: 12px;
+    }
+
+    /* КАРТОЧКА ИССЛЕДОВАНИЯ */
+    .dungeon-view-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .room-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--biome-color);
+      background: rgba(6, 182, 212, 0.12);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--biome-glow);
+    }
+
+    .room-visual-box {
+      width: 100%;
+      height: 130px;
+      background: radial-gradient(circle at 50% 60%, rgba(30, 41, 59, 0.8) 0%, rgba(11, 17, 32, 0.95) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .room-vector-stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .room-narrative-box {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      background: rgba(11, 17, 32, 0.7);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--biome-color);
+    }
+
+    /* СЕТКА ДЕЙСТВИЙ */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action-card-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      color: var(--text-main);
+    }
+    .action-card-btn:hover {
+      border-color: var(--biome-color);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-neon);
+    }
+    .action-card-btn.primary-action {
+      border-color: rgba(6, 182, 212, 0.4);
+      background: linear-gradient(180deg, #182845 0%, #101c33 100%);
+    }
+
+    .btn-key-badge {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-dim);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .btn-icon-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .btn-description {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+
+    /* АРЕНА БОЯ */
+    .combat-arena-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .enemy-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 6px 0 10px 0;
+    }
+
+    .enemy-model-wrapper {
+      width: 140px;
+      height: 140px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: monsterSway 4s ease-in-out infinite;
+    }
+
+    .enemy-pedestal {
+      position: absolute;
+      bottom: 6px;
+      width: 110px;
+      height: 22px;
+      background: radial-gradient(ellipse at center, var(--biome-glow) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .monster-svg-container {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
+      transition: transform 0.15s ease;
+    }
+    .monster-svg-container.hit-shake {
+      animation: hitShake 0.4s ease-in-out;
+    }
+
+    .enemy-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .enemy-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+    .boss-tag {
+      font-size: 10px;
+      font-weight: 800;
+      background: #831843;
+      color: #f43f5e;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #f43f5e;
+      animation: pulseAlert 2s infinite;
+    }
+
+    .enemy-title {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .enemy-hp-container {
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .enemy-hp-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .enemy-hp-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(11, 17, 32, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .enemy-hp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e11d48, #f43f5e);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+    }
+    .enemy-hp-ghost {
+      position: absolute;
+      top: 0; left: 0; height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: width 0.6s ease;
+    }
+
+    /* ЛОГ БОЯ */
+    .combat-log-box {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      height: 70px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .combat-log-box::-webkit-scrollbar { width: 4px; }
+    .combat-log-box::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+    .log-entry { animation: fadeInLog 0.2s ease-out; }
+    .log-hero { color: #38bdf8; }
+    .log-enemy { color: #fb7185; }
+    .log-heal { color: #34d399; }
+    .log-crit { color: #fbbf24; font-weight: 700; }
+    .log-drop { color: #f59e0b; font-weight: 800; background: rgba(245, 158, 11, 0.12); padding: 1px 4px; border-radius: 4px; }
+    .log-event { color: #c084fc; }
+
+    /* КНОПКИ БОЯ */
+    .combat-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .battle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+    .battle-btn:hover {
+      border-color: var(--biome-color);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-badge {
+      margin-left: auto;
+      font-size: 9px;
+      color: var(--text-dim);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    /* FLOATING NUMBERS */
+    .floating-numbers-container {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .floating-damage {
+      position: absolute;
+      font-size: 22px;
+      font-weight: 900;
+      color: #f43f5e;
+      text-shadow: 0 2px 6px #000, 0 0 8px rgba(244, 63, 94, 0.7);
+      animation: floatUpAndFade 0.85s ease-out forwards;
+      white-space: nowrap;
+    }
+    .floating-crit {
+      font-size: 26px;
+      color: #fbbf24;
+      text-shadow: 0 2px 8px #000, 0 0 12px rgba(245, 158, 11, 0.7);
+      animation: floatUpAndFade 1.1s ease-out forwards;
+    }
+    .floating-heal {
+      font-size: 20px;
+      color: #10b981;
+      text-shadow: 0 2px 6px #000, 0 0 8px rgba(16, 185, 129, 0.7);
+      animation: floatUpAndFade 0.85s ease-out forwards;
+    }
+    .floating-drop {
+      font-size: 15px;
+      color: #f59e0b;
+      text-shadow: 0 2px 6px #000;
+      animation: floatUpAndFade 1.4s ease-out forwards;
+    }
+
+    /* МАГАЗИН АЛХИМИКА */
+    .shop-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .merchant-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+    .merchant-vector-avatar {
+      width: 52px;
+      height: 52px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-gold);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .merchant-info h3 {
+      font-size: 14px;
+      color: #f8fafc;
+      font-weight: 800;
+    }
+    .merchant-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .shop-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .shop-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      gap: 8px;
+    }
+    .shop-item-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .shop-item-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .shop-item-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .btn-buy {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      border: 1px solid #f59e0b;
+      color: #0b1120;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-buy:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 0 10px var(--accent-gold-glow);
+    }
+    .btn-buy:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #334155;
+      border-color: #475569;
+      color: #94a3b8;
+    }
+
+    /* МОДАЛЬНЫЕ ОКНА */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInModal 0.2s ease-out;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md), var(--shadow-neon);
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(24, 34, 56, 0.7);
+    }
+    .modal-header h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 70vh;
+    }
+
+    /* ПЕРСОНАЖ: PAPER DOLL & СНАРЯЖЕНИЕ */
+    .hero-modal-split {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .paper-doll-frame {
+      background: radial-gradient(circle at center, rgba(30, 45, 74, 0.8) 0%, rgba(11, 17, 32, 0.95) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+    .paper-doll-stage {
+      width: 160px;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .gear-slots-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .gear-slot-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+    .slot-icon-box {
+      width: 36px;
+      height: 36px;
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .slot-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+    .slot-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .slot-stats {
+      font-size: 10px;
+      color: var(--biome-color);
+    }
+
+    /* КАРТА ПОДЗЕМЕЛЬЯ */
+    .dungeon-map-visual {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .map-nodes-track {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding: 10px 0;
+    }
+    .map-nodes-track::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 20px; right: 20px; height: 3px;
+      background: #1e293b;
+      z-index: 1;
+      transform: translateY(-50%);
+    }
+    .map-node-item {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .map-node-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .map-node-item.completed .map-node-circle {
+      border-color: #10b981;
+      background: #064e3b;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+    .map-node-item.current .map-node-circle {
+      border-color: var(--biome-color);
+      background: #0e7490;
+      box-shadow: 0 0 15px var(--biome-glow);
+      transform: scale(1.15);
+    }
+    .map-node-item.boss .map-node-circle {
+      border-color: #f43f5e;
+      background: #881337;
+    }
+    .map-node-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .map-node-item.current .map-node-label {
+      color: var(--biome-color);
+    }
+
+    /* КНОПКИ */
+    .hero-btn {
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
+      transition: all 0.2s ease;
+    }
+    .hero-btn:hover {
+      background: linear-gradient(135deg, #0369a1, #0891b2);
+      box-shadow: 0 0 20px var(--biome-glow);
+      transform: translateY(-1px);
+    }
+    .hero-btn:active {
+      transform: translateY(1px);
+    }
+
+    .secondary-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+    .secondary-btn:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: var(--biome-color);
+      color: #ffffff;
+    }
+    .secondary-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* АНИМАЦИИ */
+    @keyframes fadeInScreen {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes modalSlideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes crystalPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    @keyframes monsterSway {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-5px) scale(1.02); }
+    }
+    @keyframes hitShake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+      40%, 60% { transform: translate3d(5px, 0, 0); }
+    }
+    @keyframes floatUpAndFade {
+      0% { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+      20% { opacity: 1; transform: translate(-50%, -15px) scale(1.15); }
+      80% { opacity: 1; transform: translate(-50%, -35px) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50px) scale(0.8); }
+    }
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @media (max-width: 520px) {
+      .hero-modal-split { grid-template-columns: 1fr; }
+      .paper-doll-frame { height: 180px; }
+      .action-grid, .combat-action-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-state="title">
+
+  <canvas id="ambient-canvas"></canvas>
+
+  <div id="app-container">
+
+    <!-- ВЕРХНЯЯ ШАПКА -->
+    <header>
+      <div class="brand">
+        <!-- Векторный кристальный герб Synth-RPG -->
+        <svg class="brand-crest" viewBox="0 0 40 40" fill="none">
+          <polygon points="20,2 36,12 30,36 10,36 4,12" fill="url(#crestGrad)" stroke="var(--biome-color)" stroke-width="1.8"/>
+          <polygon points="20,2 26,14 20,34 14,14" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="0.8"/>
+          <defs>
+            <linearGradient id="crestGrad" x1="4" y1="2" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0284c7"/>
+              <stop offset="0.6" stop-color="var(--biome-color)"/>
+              <stop offset="1" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="brand-text">
+          <h1>Хроники Подземелья</h1>
+          <span>Эхо Кристалла</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="music-track-pill" class="music-track-pill" title="Нажмите, чтобы включить/выключить музыку">
+          <span class="music-eq-bars" id="music-eq-bars">
+            <span class="music-bar" style="height: 5px;"></span>
+            <span class="music-bar" style="height: 10px;"></span>
+            <span class="music-bar" style="height: 6px;"></span>
+          </span>
+          <span id="music-track-title">♫ Эфирный Покой</span>
+        </div>
+        <div id="header-floor-badge" class="floor-badge" style="display: none;">
+          <span>Этаж</span> <strong id="hud-floor-num">1</strong>/10
+        </div>
+        <button id="btn-music-toggle" class="icon-btn playing" title="Фоновая музыка Вкл/Выкл" aria-label="Переключить музыку">
+          <span id="music-icon-container"></span>
+        </button>
+        <button id="btn-sound-toggle" class="icon-btn" title="Звуковые эффекты Вкл/Выкл" aria-label="Переключить звуки">
+          <span id="sound-icon-container"></span>
+        </button>
+        <button id="btn-restart" class="icon-btn" title="В главное меню" aria-label="Сброс игры" style="display: none;">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- БАННЕР БИОМА -->
+    <div id="biome-banner" class="biome-banner" style="display: none;">
+      <div>
+        <span>Локация:</span> <span id="banner-biome-name" class="biome-name">Забытые Катакомбы Синего Эфира</span>
+      </div>
+      <div id="banner-biome-svg" style="display: flex; align-items: center;"></div>
+    </div>
+
+    <!-- HUD ХАРАКТЕРИСТИК ГЕРОЯ -->
+    <div id="main-hero-hud" class="hero-hud" style="display: none;">
+      <div class="hud-bar-wrapper">
+        <div class="hud-label-row">
+          <span style="color: var(--accent-crimson); display: flex; align-items: center; gap: 4px;">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="#f43f5e"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            HP
+          </span>
+          <span id="hud-hp-text">130 / 130</span>
+        </div>
+        <div class="meter-track">
+          <div id="hud-hp-bar" class="meter-fill meter-fill-hp" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="hud-bar-wrapper">
+        <div class="hud-label-row">
+          <span style="color: var(--accent-cyan); display: flex; align-items: center; gap: 4px;">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="#06b6d4"><polygon points="12,2 22,8.5 18,22 6,22 2,8.5"/></svg>
+            MP
+          </span>
+          <span id="hud-mp-text">25 / 25</span>
+        </div>
+        <div class="meter-track">
+          <div id="hud-mp-bar" class="meter-fill meter-fill-mp" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="hud-quick-stats">
+        <div class="quick-stat-item">
+          <span style="color: var(--accent-purple);">Класс:</span> <strong id="hud-class-name">Воин</strong>
+        </div>
+        <div class="quick-stat-item">
+          <span style="color: var(--accent-cyan);">Ур:</span> <strong id="hud-level-num">1</strong>
+        </div>
+        <div class="quick-stat-item">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#f59e0b"><path d="M14.5 17.5L3 6l3-3 11.5 11.5-3 3zm4.5 4.5l-3-3 1.5-1.5 3 3-1.5 1.5z"/></svg>
+          <strong id="hud-atk-num">16</strong>
+        </div>
+        <div class="quick-stat-item">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+          <strong id="hud-def-num">10</strong>
+        </div>
+        <div class="quick-stat-item stat-gold">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="9"/><text x="12" y="16" font-size="12" font-weight="800" text-anchor="middle" fill="#070b14">G</text></svg>
+          <strong id="hud-gold-num">30</strong>
+        </div>
+        <div class="quick-stat-item stat-sp">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#a855f7"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+          <strong id="hud-sp-num">1</strong>
+        </div>
+        <div class="quick-stat-item">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#10b981"><path d="M9 2h6v3H9V2zm-3 7h12l-1.5 12h-9L6 9z"/></svg>
+          <strong id="hud-potion-count">2</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         ЭКРАН 1: ГЛАВНОЕ МЕНЮ
+         ====================================================================== -->
+    <main id="screen-title" class="game-screen active">
+      <div style="text-align: center; margin: 20px 0 10px 0;">
+        <svg viewBox="0 0 100 100" width="90" height="90" fill="none" style="margin: 0 auto; filter: drop-shadow(0 0 16px var(--accent-cyan-glow));">
+          <polygon points="50,5 85,32 72,92 28,92 15,32" fill="url(#titleCrystalGrad)" stroke="#38bdf8" stroke-width="2.5" />
+          <polygon points="50,5 65,34 50,88 35,34" fill="rgba(255,255,255,0.22)" stroke="#a855f7" stroke-width="1.5" />
+          <polygon points="15,32 35,34 28,92" fill="rgba(6,182,212,0.4)" />
+          <polygon points="85,32 65,34 72,92" fill="rgba(168,85,247,0.4)" />
+          <line x1="50" y1="5" x2="50" y2="88" stroke="#ffffff" stroke-width="2" opacity="0.8" />
+          <defs>
+            <linearGradient id="titleCrystalGrad" x1="15" y1="5" x2="85" y2="92" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0284c7" />
+              <stop offset="0.5" stop-color="#06b6d4" />
+              <stop offset="1" stop-color="#7c3aed" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <h2 style="text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #f8fafc; margin-bottom: 4px;">
+        Хроники Подземелья
+      </h2>
+      <p style="text-align: center; font-size: 13px; color: var(--accent-cyan); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">
+        Эхо Кристалла
+      </p>
+      <p style="text-align: center; font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 480px; margin: 0 auto 20px auto;">
+        Неоновый темный фэнтези-рогалик: выберите класс героя, находите редкое снаряжение, меняющее облик персонажа, одолевайте чудовищ и дойдите до 10-го этажа.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; width: 100%;">
+        <button id="btn-to-class-select" class="hero-btn">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#ffffff"><path d="M14.5 17.5L3 6l3-3 11.5 11.5-3 3zm4.5 4.5l-3-3 1.5-1.5 3 3-1.5 1.5z"/></svg>
+          <span id="start-game-text">Выбрать героя и в поход</span>
+        </button>
+
+        <button id="btn-continue-game" class="secondary-btn" style="display: none;">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <span>Продолжить поход (<span id="continue-floor-text">1 этаж</span>)</span>
+        </button>
+
+        <button id="btn-open-help" class="secondary-btn">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm1.07-7.75l-.9.92C11.45 10.9 11 11.5 11 13h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+          <span>Руководство искателя</span>
+        </button>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 24px; font-size: 11px; text-align: center; color: var(--text-dim);">
+        Synth-RPG Dark Fantasy · 4 Уникальные Локации · Динамический Paper Doll
+      </div>
+    </main>
+
+    <!-- ======================================================================
+         ЭКРАН 2: ВЫБОР КЛАССА
+         ====================================================================== -->
+    <section id="screen-class-select" class="game-screen">
+      <div style="text-align: center; margin-bottom: 12px;">
+        <h2 style="font-size: 18px; color: #f8fafc; font-weight: 800; letter-spacing: 0.5px;">Выберите класс героя</h2>
+        <p style="font-size: 12px; color: var(--text-muted);">Каждый класс начинает со своим стартовым стилем и одним уникальным заклинанием.</p>
+      </div>
+
+      <div class="class-select-container">
+        <!-- 1. ВОИН -->
+        <div class="class-card selected" data-class="warrior">
+          <div class="class-avatar-box">
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <path d="M22 36 L40 16 L58 36 L54 62 L26 62 Z" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+              <line x1="30" y1="42" x2="50" y2="42" stroke="#f43f5e" stroke-width="2.5"/>
+              <line x1="40" y1="42" x2="40" y2="56" stroke="#f43f5e" stroke-width="2.5"/>
+              <path d="M12 60 L24 45 M68 60 L56 45" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="class-info">
+            <div class="class-title-row">
+              <span class="class-name">Воин</span>
+              <span class="class-archetype">Падший Рыцарь</span>
+            </div>
+            <p class="class-desc">Высокий запас здоровья и броня. Стартовое заклинание: «Удар Крови» (180% урона + самолечение 25%).</p>
+            <div class="class-pips-row">
+              <span>HP: <strong>130</strong></span>
+              <span>MP: <strong>25</strong></span>
+              <span>АТК: <strong>16</strong></span>
+              <span>ЗАЩ: <strong>10</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. МАГ -->
+        <div class="class-card" data-class="mage">
+          <div class="class-avatar-box">
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <path d="M20 58 C20 28, 30 14, 40 10 C50 14, 60 28, 60 58 Z" fill="#1e1b4b" stroke="#a855f7" stroke-width="2"/>
+              <ellipse cx="40" cy="40" rx="14" ry="12" fill="#060912"/>
+              <circle cx="34" cy="38" r="3" fill="#38bdf8"/>
+              <circle cx="46" cy="38" r="3" fill="#38bdf8"/>
+              <circle cx="40" cy="62" r="7" fill="#6366f1" stroke="#38bdf8" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="class-info">
+            <div class="class-title-row">
+              <span class="class-name">Маг</span>
+              <span class="class-archetype">Отступник Академии</span>
+            </div>
+            <p class="class-desc">Огромный запас маны и тайные знания. Стартовое заклинание: «Цепная Молния» (игнорирует 50% защиты монстра).</p>
+            <div class="class-pips-row">
+              <span>HP: <strong>85</strong></span>
+              <span>MP: <strong>65</strong></span>
+              <span>АТК: <strong>12</strong></span>
+              <span>ЗАЩ: <strong>5</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. РАЗБОЙНИК -->
+        <div class="class-card" data-class="rogue">
+          <div class="class-avatar-box">
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <path d="M24 54 C24 32, 32 18, 40 14 C48 18, 56 32, 56 54 Z" fill="#182238" stroke="#10b981" stroke-width="2"/>
+              <path d="M26 42 L54 42 L50 56 L30 56 Z" fill="#090d16" stroke="#10b981" stroke-width="1.2"/>
+              <circle cx="34" cy="36" r="2.5" fill="#f59e0b"/>
+              <circle cx="46" cy="36" r="2.5" fill="#f59e0b"/>
+              <line x1="16" y1="62" x2="30" y2="48" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="64" y1="62" x2="50" y2="48" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="class-info">
+            <div class="class-title-row">
+              <span class="class-name">Разбойник</span>
+              <span class="class-archetype">Теневой Клинок</span>
+            </div>
+            <p class="class-desc">Мастер засад с 32% шансом критического урона. Стартовое заклинание: «Теневая Засада» (гарантированный x2.2 крит).</p>
+            <div class="class-pips-row">
+              <span>HP: <strong>100</strong></span>
+              <span>MP: <strong>35</strong></span>
+              <span>АТК: <strong>18</strong></span>
+              <span>ЗАЩ: <strong>6</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 14px;">
+        <button id="btn-back-to-menu" class="secondary-btn" style="flex: 1;">
+          Назад
+        </button>
+        <button id="btn-confirm-class" class="hero-btn" style="flex: 2;">
+          <span>Подтвердить выбор</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ЭКРАН 3: ПРОЛОГ И СЮЖЕТ
+         ====================================================================== -->
+    <section id="screen-story-intro" class="game-screen">
+      <div class="story-scroll-card">
+        <div class="story-header">
+          <span id="story-class-tag">Орден Крови</span>
+          <h2 id="story-title">Падение и Зов Катакомб</h2>
+        </div>
+
+        <div id="story-paragraphs" class="story-body"></div>
+
+        <button id="btn-begin-descent" class="hero-btn" style="margin-top: 8px;">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#ffffff"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-4-6h-2v-2h2v2z"/></svg>
+          <span>Спуститься в катакомбы</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ЭКРАН 4: ИССЛЕДОВАНИЕ ПОДЗЕМЕЛЬЯ
+         ====================================================================== -->
+    <section id="screen-explore" class="game-screen">
+      <div class="dungeon-view-card">
+        <div class="room-header">
+          <span id="explore-room-tag" class="room-tag">Зал 1</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-open-map" class="secondary-btn" style="padding: 4px 8px; font-size: 11px;">
+              <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--biome-color)"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+              <span>Карта этажа</span>
+            </button>
+            <span id="explore-floor-indicator" style="font-size: 11px; color: var(--text-dim);">Комната 1 / 4</span>
+          </div>
+        </div>
+
+        <div class="room-visual-box">
+          <div id="room-vector-stage" class="room-vector-stage"></div>
+          <div id="room-ambient-text" style="position: absolute; bottom: 6px; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px;">
+            Каменные своды окутаны мягким сиянием
+          </div>
+        </div>
+
+        <div id="room-narrative" class="room-narrative-box">
+          Вы вступаете в полутемную галерею. Эхо ваших шагов растворяется в тишине подземных лабиринтов.
+        </div>
+      </div>
+
+      <!-- Сетка действий исследования -->
+      <div class="action-grid">
+        <button id="btn-action-forward" class="action-card-btn primary-action">
+          <span class="btn-key-badge">1 / Space</span>
+          <div class="btn-icon-title">
+            <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="var(--biome-color)"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-4-6h-2v-2h2v2z"/></svg>
+            <span>Идти дальше</span>
+          </div>
+          <span class="btn-description">Продвинуться вглубь этажа. Возможна встреча с врагом!</span>
+        </button>
+
+        <button id="btn-action-chest" class="action-card-btn">
+          <span class="btn-key-badge">2</span>
+          <div class="btn-icon-title">
+            <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="var(--accent-gold)"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 0h-4V4h4v2zm-2 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+            <span>Обыскать тайник</span>
+          </div>
+          <span class="btn-description">Поискать золото, руны и спрятанное снаряжение.</span>
+        </button>
+
+        <button id="btn-action-rest" class="action-card-btn">
+          <span class="btn-key-badge">3</span>
+          <div class="btn-icon-title">
+            <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="var(--accent-emerald)"><path d="M19.48 12.35c-1.57-.56-2.92-1.56-3.88-2.88C15.09 8.81 14.7 7.7 14.54 6.5c-1.15 1.54-1.8 3.42-1.8 5.43 0 4.97 4.03 9 9 9 .46 0 .9-.04 1.34-.11-1.48-4.49-4.88-7.94-9.35-9.35zM4 19h16v2H4z"/></svg>
+            <span>Отдохнуть у источника</span>
+          </div>
+          <span class="btn-description">Восстановить часть HP и MP перед битвой.</span>
+        </button>
+
+        <button id="btn-action-shop-shortcut" class="action-card-btn">
+          <span class="btn-key-badge">4</span>
+          <div class="btn-icon-title">
+            <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="var(--accent-gold)"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            <span>Лавка торговца</span>
+          </div>
+          <span class="btn-description">Купить снаряжение, эликсиры и гримуары навыков.</span>
+        </button>
+
+        <button id="btn-action-hero" class="action-card-btn" style="grid-column: 1 / -1;">
+          <span class="btn-key-badge">5 / I</span>
+          <div class="btn-icon-title">
+            <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="var(--accent-cyan)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>Герой, Снаряжение & Гримуар Заклинаний</span>
+          </div>
+          <span class="btn-description">Инвентарь трофеев, изучение новых заклинаний за SP и прокачка.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ЭКРАН 5: ПОШАГОВЫЙ БОЙ
+         ====================================================================== -->
+    <section id="screen-combat" class="game-screen">
+      <div class="combat-arena-card">
+        <div class="enemy-stage">
+          <div id="floating-numbers" class="floating-numbers-container"></div>
+
+          <div class="enemy-model-wrapper">
+            <div class="enemy-pedestal"></div>
+            <!-- Векторная модель монстра -->
+            <div id="monster-svg-container" class="monster-svg-container"></div>
+          </div>
+
+          <div style="width: 100%; max-width: 320px;">
+            <div class="enemy-name-row">
+              <span id="enemy-name" class="enemy-name">Каменный Скелет</span>
+              <span id="enemy-boss-badge" class="boss-tag" style="display: none;">БОСС</span>
+            </div>
+            <div id="enemy-title" class="enemy-title">Забытый страж руин</div>
+
+            <div class="enemy-hp-container">
+              <div class="enemy-hp-labels">
+                <span style="color: var(--accent-crimson);">Здоровье врага</span>
+                <span id="enemy-hp-text">46 / 46</span>
+              </div>
+              <div class="enemy-hp-track">
+                <div id="enemy-hp-ghost" class="enemy-hp-ghost" style="width: 100%;"></div>
+                <div id="enemy-hp-bar" class="enemy-hp-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="combat-log" class="combat-log-box">
+          <div class="log-entry log-event">Бой начался! Выберите действие.</div>
+        </div>
+      </div>
+
+      <!-- Действия боя -->
+      <div class="combat-action-grid">
+        <button id="btn-combat-attack" class="battle-btn" style="border-color: rgba(244, 63, 94, 0.4);">
+          <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="#f43f5e"><path d="M14.5 17.5L3 6l3-3 11.5 11.5-3 3zm4.5 4.5l-3-3 1.5-1.5 3 3-1.5 1.5z"/></svg>
+          <span>Атака клинком</span>
+          <span class="btn-badge">1 / Space</span>
+        </button>
+
+        <button id="btn-combat-skills-menu" class="battle-btn" style="border-color: rgba(168, 85, 247, 0.4);">
+          <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="#a855f7"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+          <span>Заклинания (<span id="combat-unlocked-skills-count">1</span>)</span>
+          <span class="btn-badge">2</span>
+        </button>
+
+        <button id="btn-combat-heal" class="battle-btn" style="border-color: rgba(16, 185, 129, 0.4);">
+          <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="#10b981"><path d="M9 2h6v3H9V2zm-3 7h12l-1.5 12h-9L6 9z"/></svg>
+          <span>Зелье (<span id="combat-potion-val">2</span>)</span>
+          <span class="btn-badge">3</span>
+        </button>
+
+        <button id="btn-combat-defend" class="battle-btn" style="border-color: rgba(56, 189, 248, 0.4);">
+          <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+          <span>Щит & Блок (+10 MP)</span>
+          <span class="btn-badge">4</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ЭКРАН 6: МАГАЗИН АЛХИМИКА
+         ====================================================================== -->
+    <section id="screen-shop" class="game-screen">
+      <div class="shop-card">
+        <div class="merchant-profile">
+          <div class="merchant-vector-avatar">
+            <svg viewBox="0 0 60 60" width="48" height="48" fill="none">
+              <path d="M12 48 C12 20, 20 10, 30 6 C40 10, 48 20, 48 48 Z" fill="#1e1b4b" stroke="#f59e0b" stroke-width="1.8"/>
+              <path d="M18 36 C18 24, 42 24, 42 36 C42 42, 18 42, 18 36 Z" fill="#090d16"/>
+              <circle cx="24" cy="32" r="3.5" fill="#f59e0b"/>
+              <circle cx="36" cy="32" r="3.5" fill="#f59e0b"/>
+              <circle cx="24" cy="32" r="1.5" fill="#ffffff"/>
+              <circle cx="36" cy="32" r="1.5" fill="#ffffff"/>
+              <polygon points="16,48 30,42 44,48 30,54" fill="#374151" stroke="#f59e0b" stroke-width="1.2"/>
+            </svg>
+          </div>
+          <div class="merchant-info">
+            <h3>Лавка Бродячего Алхимика Гримлика</h3>
+            <p>«Кристаллы поют о твоих подвигах, путник! Приобрети зелья и свитки навыков, чтобы выучить новые заклинания!»</p>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700;">
+          <span style="color: var(--text-muted);">Ваше золото:</span>
+          <span style="color: var(--accent-gold); font-size: 16px; display: flex; align-items: center; gap: 5px;">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="9"/><text x="12" y="16" font-size="12" font-weight="800" text-anchor="middle" fill="#070b14">G</text></svg>
+            <span id="shop-gold-display">0</span>
+          </span>
+        </div>
+
+        <div id="shop-items-container" class="shop-items-list"></div>
+
+        <button id="btn-leave-shop" class="hero-btn" style="width: 100%;">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="#ffffff"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-4-6h-2v-2h2v2z"/></svg>
+          <span id="btn-leave-shop-text">Продолжить поход</span>
+        </button>
+      </div>
+    </section>
+
+  </div> <!-- /#app-container -->
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 1: ГЕРОЙ, СТАТЫ, СНАРЯЖЕНИЕ И ГРИМУАР ЗАКЛИНАНИЙ
+       ========================================================================== -->
+  <div id="modal-hero" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--biome-color)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>Герой, Снаряжение & Гримуар</span>
+        </h3>
+        <button id="btn-close-hero-modal" class="icon-btn" aria-label="Закрыть">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="hero-modal-split">
+          <!-- СЛОИ ПЕРСОНАЖА (PAPER DOLL) -->
+          <div class="paper-doll-frame">
+            <div id="paper-doll-container" class="paper-doll-stage"></div>
+            <div style="font-size: 10px; color: var(--biome-color); font-weight: 700; text-transform: uppercase;">
+              Внешний вид героя
+            </div>
+          </div>
+
+          <!-- СЛОТЫ СНАРЯЖЕНИЯ -->
+          <div class="gear-slots-grid">
+            <!-- Оружие -->
+            <div class="gear-slot-row">
+              <div class="slot-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="#f87171"><path d="M14.5 17.5L3 6l3-3 11.5 11.5-3 3zm4.5 4.5l-3-3 1.5-1.5 3 3-1.5 1.5z"/></svg>
+              </div>
+              <div class="slot-details">
+                <span class="slot-name" id="equip-weapon-name">Закаленный Палаш</span>
+                <span class="slot-stats" id="equip-weapon-bonus">+6 АТК · 1 Тир</span>
+              </div>
+            </div>
+
+            <!-- Щит -->
+            <div class="gear-slot-row">
+              <div class="slot-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+              </div>
+              <div class="slot-details">
+                <span class="slot-name" id="equip-shield-name">Окованный Баклер</span>
+                <span class="slot-stats" id="equip-shield-bonus">+4 ЗАЩ, +15 HP</span>
+              </div>
+            </div>
+
+            <!-- Шлем -->
+            <div class="gear-slot-row">
+              <div class="slot-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="#fef08a"><path d="M12 2a9 9 0 0 0-9 9v4h18v-4a9 9 0 0 0-9-9zm-5 11a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+              </div>
+              <div class="slot-details">
+                <span class="slot-name" id="equip-helmet-name">Ржавый Бацинет</span>
+                <span class="slot-stats" id="equip-helmet-bonus">+3 ЗАЩ, +10 HP</span>
+              </div>
+            </div>
+
+            <!-- Броня -->
+            <div class="gear-slot-row">
+              <div class="slot-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="#34d399"><path d="M12 2l-6 3v6c0 5.5 3.5 10.5 6 11 2.5-.5 6-5.5 6-11V5l-6-3z"/></svg>
+              </div>
+              <div class="slot-details">
+                <span class="slot-name" id="equip-armor-name">Кольчуга Наемника</span>
+                <span class="slot-stats" id="equip-armor-bonus">+5 ЗАЩ, +20 HP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- СТАТИСТИКА И ПРОКАЧКА ХАРАКТЕРИСТИК -->
+        <div style="background: rgba(11, 17, 32, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--accent-gold);">Очки характеристик: <strong id="free-points-count">0</strong></span>
+            <span style="font-size: 11px; color: var(--text-dim);">Уровень <strong id="modal-level">1</strong> (Опыт: <span id="modal-exp">0/40</span>)</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 6px 8px; border-radius: 6px;">
+              <span>Макс HP: <strong id="modal-max-hp">130</strong></span>
+              <button id="btn-upgrade-hp" class="secondary-btn" style="padding: 2px 8px; font-size: 10px;">+15 HP</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 6px 8px; border-radius: 6px;">
+              <span>Макс MP: <strong id="modal-max-mp">25</strong></span>
+              <button id="btn-upgrade-mp" class="secondary-btn" style="padding: 2px 8px; font-size: 10px;">+10 MP</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 6px 8px; border-radius: 6px;">
+              <span>Атака: <strong id="modal-atk">16</strong></span>
+              <button id="btn-upgrade-atk" class="secondary-btn" style="padding: 2px 8px; font-size: 10px;">+2 АТК</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 6px 8px; border-radius: 6px;">
+              <span>Защита: <strong id="modal-def">10</strong></span>
+              <button id="btn-upgrade-def" class="secondary-btn" style="padding: 2px 8px; font-size: 10px;">+1 ЗАЩ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ГРИМУАР ЗАКЛИНАНИЙ И ИЗУЧЕНИЕ НАВЫКОВ -->
+        <div style="background: rgba(11, 17, 32, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--accent-purple);">
+              Гримуар заклинаний (Очки навыков SP: <strong id="modal-sp-count">1</strong>)
+            </span>
+            <span style="font-size: 11px; color: var(--text-dim);">Изучено: <span id="modal-unlocked-skills-counter">1 / 7</span></span>
+          </div>
+
+          <div id="grimorie-skills-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+            <!-- Динамический список всех заклинаний с кнопками "Изучить за 1 SP" -->
+          </div>
+        </div>
+
+        <!-- ИНВЕНТАРЬ ЗЕЛИЙ -->
+        <div style="display: flex; gap: 8px;">
+          <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+            <span style="font-size: 12px; color: #34d399;">Зелья HP: <strong id="modal-potion-qty">2</strong></span>
+            <button id="btn-use-potion-inventory" class="secondary-btn" style="padding: 4px 8px; font-size: 11px;">Выпить (+50)</button>
+          </div>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+            <span style="font-size: 12px; color: #38bdf8;">Эликсиры MP: <strong id="modal-elixir-qty">1</strong></span>
+            <button id="btn-use-elixir-inventory" class="secondary-btn" style="padding: 4px 8px; font-size: 11px;">Выпить (+30)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 2: КАРТА ЭТАЖА
+       ========================================================================== -->
+  <div id="modal-map" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--biome-color)"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+          <span>Карта текущего этажа (<span id="map-floor-number">1</span>)</span>
+        </h3>
+        <button id="btn-close-map-modal" class="icon-btn" aria-label="Закрыть">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="dungeon-map-visual">
+          <div class="map-nodes-track">
+            <div id="map-node-1" class="map-node-item current">
+              <div class="map-node-circle">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v10l8 5 8-5V7l-8-5z"/></svg>
+              </div>
+              <span class="map-node-label">Зал 1</span>
+            </div>
+
+            <div id="map-node-2" class="map-node-item">
+              <div class="map-node-circle">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 17.5L3 6l3-3 11.5 11.5-3 3zm4.5 4.5l-3-3 1.5-1.5 3 3-1.5 1.5z"/></svg>
+              </div>
+              <span class="map-node-label">Зал 2</span>
+            </div>
+
+            <div id="map-node-3" class="map-node-item">
+              <div class="map-node-circle">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+              </div>
+              <span class="map-node-label">Событие</span>
+            </div>
+
+            <div id="map-node-4" class="map-node-item">
+              <div class="map-node-circle">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+              <span class="map-node-label">Караван</span>
+            </div>
+
+            <div id="map-node-5" class="map-node-item boss">
+              <div class="map-node-circle">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-4-6h-2v-2h2v2z"/></svg>
+              </div>
+              <span class="map-node-label">Спуск / Босс</span>
+            </div>
+          </div>
+
+          <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; font-size: 12px; line-height: 1.5; color: #cbd5e1;">
+            <p><strong style="color: var(--biome-color);">Легенда карты:</strong> Зеленые узлы — пройденные залы подземелья. Бирюзовый узел — ваше текущее местоположение. Впереди вас ждут древние святилища, алтари и лавка алхимика перед спуском на глубину.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 3: СЛУЧАЙНЫЕ СОБЫТИЯ
+       ========================================================================== -->
+  <div id="modal-event" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="event-modal-title">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--biome-color)"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+          <span id="event-title-text">Оскверненный Алтарь Крови</span>
+        </h3>
+      </div>
+
+      <div class="modal-body">
+        <div id="event-vector-art" style="height: 100px; background: rgba(11, 17, 32, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;"></div>
+
+        <p id="event-desc-text" style="font-size: 13px; line-height: 1.5; color: #cbd5e1; background: var(--bg-card); padding: 10px; border-radius: var(--radius-sm); border-left: 3px solid var(--biome-color);">
+          В центре зала возвышается черный монолит, покрытый запекшейся кровью. Вы чувствуете пульсацию нечестивой мощи.
+        </p>
+
+        <div id="event-options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 4: ЗАКЛИНАНИЯ В БОЮ
+       ========================================================================== -->
+  <div id="modal-combat-spells" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--accent-purple)"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+          <span>Гримуар Заклинаний в Бою</span>
+        </h3>
+        <button id="btn-close-spells-modal" class="icon-btn" aria-label="Закрыть">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="combat-spells-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 5: РУКОВОДСТВО
+       ========================================================================== -->
+  <div id="modal-help" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--accent-cyan)"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+          <span>Руководство Искателя</span>
+        </h3>
+        <button id="btn-close-help-modal" class="icon-btn" aria-label="Закрыть">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="font-size: 13px; line-height: 1.5; color: #cbd5e1;">
+        <p><strong style="color: var(--biome-color);">1. Классы и заклинания:</strong> Каждый класс начинает лишь со своим коронным заклинанием. Остальные заклинания можно изучить в Гримуаре в окне персонажа за очки навыков (SP).</p>
+        <p><strong style="color: var(--biome-color);">2. 4 Локации с мягким фоном:</strong> Катакомбы Синего Эфира, Изумрудные Грибные Топи, Теплый Обсидиановый Разлом и Кристальный Пантеон Вечности.</p>
+        <p><strong style="color: var(--biome-color);">3. Трофеи чудовищ:</strong> Монстры роняют мечи, шлемы, щиты и латы, которые визуально отображаются на герое (Paper Doll) и дают прибавку к характеристикам.</p>
+        <p><strong style="color: var(--biome-color);">4. Случайные события:</strong> Жертвуйте HP у алтарей, вскрывайте сундуки и пейте из источников эфира.</p>
+        <p><strong style="color: var(--biome-color);">5. Приятная музыка и звуки:</strong> Процедурный аналоговый эмбиент с теплыми переливами и звонкими колокольчиками адаптируется под каждый биом. Управлять музыкой и звуковыми эффектами можно через кнопки с нотой и динамиком в правом верхнем углу.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 6: ПОРАЖЕНИЕ
+       ========================================================================== -->
+  <div id="modal-gameover" class="modal-backdrop">
+    <div class="modal-box" style="border-color: #f43f5e; text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h3 style="color: #f43f5e;">Вы пали в глубинах подземелья</h3>
+      </div>
+      <div class="modal-body" style="align-items: center;">
+        <svg viewBox="0 0 80 80" width="70" height="70" fill="none">
+          <path d="M25 45 C25 25, 55 25, 55 45 C55 56, 48 60, 46 70 L34 70 C32 60, 25 56, 25 45 Z" fill="#e2e8f0" stroke="#000" stroke-width="2"/>
+          <ellipse cx="33" cy="46" rx="4" ry="5.5" fill="#000"/>
+          <ellipse cx="47" cy="46" rx="4" ry="5.5" fill="#000"/>
+          <circle cx="33" cy="46" r="1.5" fill="#f43f5e"/>
+          <circle cx="47" cy="46" r="1.5" fill="#f43f5e"/>
+        </svg>
+        <p style="font-size: 13px; color: #cbd5e1;">Тьма сомкнулась над вами на <strong id="gameover-floor">1</strong> этаже. Но эхо первородного Кристалла вернет вашу душу ко входу.</p>
+        <button id="btn-gameover-restart" class="hero-btn" style="width: 100%; margin-top: 10px;">
+          <span>Воскреснуть и начать поход</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО 7: ПОБЕДА
+       ========================================================================== -->
+  <div id="modal-victory" class="modal-backdrop">
+    <div class="modal-box" style="border-color: var(--accent-gold); text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h3 style="color: var(--accent-gold);">Победа! Сердце Эхо покорено!</h3>
+      </div>
+      <div class="modal-body" style="align-items: center;">
+        <svg viewBox="0 0 80 80" width="70" height="70" fill="none">
+          <polygon points="40,8 70,30 60,72 20,72 10,30" fill="#78350f" stroke="#f59e0b" stroke-width="2"/>
+          <polygon points="40,16 60,34 40,64 20,34" fill="#fef08a" filter="drop-shadow(0 0 8px #f59e0b)"/>
+        </svg>
+        <p style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+          Архи-Титан пал, рассыпавшись лазурными кристаллами. Сила древнего Сердца Эхо наполняет ваш дух вечным сиянием!
+        </p>
+        <button id="btn-victory-restart" class="hero-btn" style="width: 100%; margin-top: 10px;">
+          <span>Вернуться триумфатором</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT ДВИЖОК С СИСТЕМОЙ ЗАКЛИНАНИЙ И БИОМОВ
+       ========================================================================== -->
+  <script>
+    (function() {
+      'use strict';
+
+      /* ----------------------------------------------------------------------
+         1. ПЕРЕРАБОТАННЫЕ ВЕКТОРНЫЕ МОДЕЛИ (КРЫСА, ВАСИЛИСК, И ДР.)
+         ---------------------------------------------------------------------- */
+      const VECTOR_MONSTERS = {
+        // Свирепая Чумная Крыса с кристаллами на спине
+        rat: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M12 75 C4 65, 8 45, 16 38 C22 34, 25 44, 28 58" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+            <path d="M12 75 C4 65, 8 45, 16 38" stroke="${color}" stroke-width="1.2" stroke-dasharray="3,3"/>
+            <path d="M26 62 C26 42, 42 32, 60 38 C72 42, 78 52, 74 68 C68 76, 34 76, 26 62 Z" fill="#1e293b" stroke="${color}" stroke-width="2"/>
+            <polygon points="34,42 38,24 45,38" fill="${color}" filter="drop-shadow(0 0 4px ${color})"/>
+            <polygon points="46,36 52,18 58,37" fill="#f43f5e" filter="drop-shadow(0 0 4px #f43f5e)"/>
+            <polygon points="59,38 66,26 70,42" fill="${color}"/>
+            <path d="M68 44 L95 56 L72 68 Z" fill="#334155" stroke="${color}" stroke-width="2"/>
+            <polygon points="90,55 93,62 87,58" fill="#ffffff"/>
+            <polygon points="85,57 88,63 82,59" fill="#ffffff"/>
+            <circle cx="78" cy="50" r="3.5" fill="#f43f5e" filter="drop-shadow(0 0 6px #f43f5e)"/>
+            <circle cx="78" cy="50" r="1.5" fill="#fef08a"/>
+            <polygon points="62,40 68,26 72,42" fill="#0f172a" stroke="${color}" stroke-width="1.5"/>
+            <path d="M38 72 L34 84 M42 72 L42 85" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M68 70 L72 84 M62 70 L64 85" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        `,
+
+        // Окаменяющий гребневый Дракон-Василиск
+        basilisk: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M22 85 C22 55, 35 40, 50 36 L62 52 C52 64, 46 76, 46 85 Z" fill="#064e3b" stroke="${color}" stroke-width="2.5"/>
+            <polygon points="32,46 22,32 38,40" fill="${color}" filter="drop-shadow(0 0 5px ${color})"/>
+            <polygon points="38,36 30,18 46,30" fill="#10b981" filter="drop-shadow(0 0 5px #10b981)"/>
+            <polygon points="46,28 42,10 56,24" fill="${color}"/>
+            <polygon points="56,24 58,8 66,22" fill="#34d399"/>
+            <path d="M48 34 L88 42 L80 62 L52 56 Z" fill="#022c22" stroke="${color}" stroke-width="2.2"/>
+            <path d="M62 50 L88 42 L72 65 Z" fill="#064e3b" stroke="#000" stroke-width="1"/>
+            <polygon points="76,46 78,54 80,48" fill="#ffffff"/>
+            <polygon points="82,47 84,56 86,49" fill="#ffffff"/>
+            <circle cx="84" cy="62" r="2" fill="#34d399" filter="drop-shadow(0 0 4px #10b981)"/>
+            <circle cx="64" cy="42" r="6" fill="#f59e0b" filter="drop-shadow(0 0 8px #f59e0b)"/>
+            <line x1="64" y1="36" x2="64" y2="48" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="62" cy="40" r="1.5" fill="#ffffff"/>
+            <polygon points="84,40 92,36 86,44" fill="${color}"/>
+          </svg>
+        `,
+
+        // Сумрачный Слизень
+        slime: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M20 74 C10 74, 12 50, 26 40 C35 30, 65 30, 74 40 C88 50, 90 74, 80 74 C65 78, 35 78, 20 74 Z" 
+                  fill="#1e1b4b" stroke="${color}" stroke-width="2.5"/>
+            <polygon points="50,42 62,54 50,66 38,54" fill="${color}" filter="drop-shadow(0 0 8px ${color})"/>
+            <ellipse cx="36" cy="46" rx="6" ry="3" fill="#ffffff" opacity="0.6"/>
+            <circle cx="42" cy="52" r="3.5" fill="#090d16"/>
+            <circle cx="58" cy="52" r="3.5" fill="#090d16"/>
+            <circle cx="43" cy="51" r="1.5" fill="#fff"/>
+            <circle cx="59" cy="51" r="1.5" fill="#fff"/>
+          </svg>
+        `,
+
+        // Каменный Скелет
+        skeleton: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M28 42 C28 22, 72 22, 72 42 C72 52, 64 58, 62 68 L38 68 C36 58, 28 52, 28 42 Z" 
+                  fill="#1e293b" stroke="${color}" stroke-width="2.2"/>
+            <ellipse cx="40" cy="44" rx="6.5" ry="8" fill="#090d16" stroke="${color}" stroke-width="1.5"/>
+            <ellipse cx="60" cy="44" rx="6.5" ry="8" fill="#090d16" stroke="${color}" stroke-width="1.5"/>
+            <circle cx="40" cy="44" r="2.5" fill="#38bdf8" filter="drop-shadow(0 0 4px #38bdf8)"/>
+            <circle cx="60" cy="44" r="2.5" fill="#38bdf8" filter="drop-shadow(0 0 4px #38bdf8)"/>
+            <polygon points="50,52 47,58 53,58" fill="${color}"/>
+            <line x1="42" y1="64" x2="42" y2="68" stroke="${color}" stroke-width="2"/>
+            <line x1="50" y1="64" x2="50" y2="68" stroke="${color}" stroke-width="2"/>
+            <line x1="58" y1="64" x2="58" y2="68" stroke="${color}" stroke-width="2"/>
+            <path d="M22 78 Q50 70 78 78" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        `,
+
+        // Эфирный Упырь
+        bat: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M50 50 Q30 20 5 35 Q18 55 35 62 L50 50 Z" fill="#1e1b4b" stroke="${color}" stroke-width="2"/>
+            <path d="M50 50 Q70 20 95 35 Q82 55 65 62 L50 50 Z" fill="#1e1b4b" stroke="${color}" stroke-width="2"/>
+            <ellipse cx="50" cy="58" rx="14" ry="18" fill="#0f172a" stroke="${color}" stroke-width="2"/>
+            <polygon points="40,46 36,28 46,38" fill="${color}"/>
+            <polygon points="60,46 64,28 54,38" fill="${color}"/>
+            <circle cx="44" cy="52" r="3" fill="#f43f5e" filter="drop-shadow(0 0 5px #f43f5e)"/>
+            <circle cx="56" cy="52" r="3" fill="#f43f5e" filter="drop-shadow(0 0 5px #f43f5e)"/>
+          </svg>
+        `,
+
+        // Гоблин-Шаман
+        goblin: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M22 68 C22 36, 32 20, 50 16 C68 20, 78 36, 78 68 Z" fill="#064e3b" stroke="${color}" stroke-width="2"/>
+            <path d="M30 24 Q16 14 12 28 Q24 28 32 30" fill="${color}" stroke="#fff" stroke-width="1"/>
+            <path d="M70 24 Q84 14 88 28 Q76 28 68 30" fill="${color}" stroke="#fff" stroke-width="1"/>
+            <ellipse cx="50" cy="48" rx="18" ry="14" fill="#022c22" stroke="${color}" stroke-width="1.8"/>
+            <ellipse cx="42" cy="46" rx="4.5" ry="3" fill="#f59e0b"/>
+            <ellipse cx="58" cy="46" rx="4.5" ry="3" fill="#f59e0b"/>
+            <line x1="82" y1="88" x2="82" y2="30" stroke="#78350f" stroke-width="3"/>
+            <polygon points="82,18 76,28 88,28" fill="${color}" filter="drop-shadow(0 0 8px ${color})"/>
+          </svg>
+        `,
+
+        // Пещерный Ткач
+        spider: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <path d="M40 50 L15 35 L8 50 M40 55 L12 55 L6 70 M40 60 L18 75 L12 88" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M60 50 L85 35 L92 50 M60 55 L88 55 L94 70 M60 60 L82 75 L88 88" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+            <ellipse cx="50" cy="66" rx="20" ry="16" fill="#1e1b4b" stroke="${color}" stroke-width="2"/>
+            <circle cx="50" cy="46" r="13" fill="#090d16" stroke="${color}" stroke-width="2"/>
+            <circle cx="46" cy="42" r="2.5" fill="#f43f5e"/>
+            <circle cx="54" cy="42" r="2.5" fill="#f43f5e"/>
+          </svg>
+        `,
+
+        // Кристальный Голем
+        golem: (color) => `
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+            <polygon points="25,32 75,32 65,78 35,78" fill="#182238" stroke="${color}" stroke-width="2.5"/>
+            <polygon points="12,30 26,18 28,38" fill="${color}"/>
+            <polygon points="88,30 74,18 72,38" fill="${color}"/>
+            <polygon points="40,24 60,24 56,36 44,36" fill="#0f172a" stroke="${color}" stroke-width="2"/>
+            <line x1="42" y1="30" x2="58" y2="30" stroke="#38bdf8" stroke-width="3" filter="drop-shadow(0 0 6px #38bdf8)"/>
+            <polygon points="50,44 60,54 50,64 40,54" fill="${color}" filter="drop-shadow(0 0 10px ${color})"/>
+          </svg>
+        `,
+
+        // Архи-Титан (ГЛАВНЫЙ БОСС)
+        boss_titan: (color) => `
+          <svg viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+            <circle cx="60" cy="60" r="52" stroke="${color}" stroke-width="2" stroke-dasharray="6,4" opacity="0.6"/>
+            <polygon points="12,48 22,25 25,58" fill="${color}" filter="drop-shadow(0 0 10px ${color})"/>
+            <polygon points="108,48 98,25 95,58" fill="${color}" filter="drop-shadow(0 0 10px ${color})"/>
+            <polygon points="40,25 50,8 60,18 70,8 80,25" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+            <polygon points="35,35 85,35 75,95 45,95" fill="#182238" stroke="${color}" stroke-width="3"/>
+            <polygon points="48,32 72,32 68,48 52,48" fill="#090d16" stroke="${color}" stroke-width="1.8"/>
+            <line x1="52" y1="40" x2="68" y2="40" stroke="#f43f5e" stroke-width="3.5" filter="drop-shadow(0 0 8px #f43f5e)"/>
+            <polygon points="60,54 74,68 60,82 46,68" fill="#a855f7" stroke="#fff" stroke-width="2" filter="drop-shadow(0 0 16px #c084fc)"/>
+          </svg>
+        `
+      };
+
+      /* ----------------------------------------------------------------------
+         2. БИОМЫ С МЯГКИМИ, НЕ РЕЖУЩИМИ ГЛАЗ ФОНАМИ
+         ---------------------------------------------------------------------- */
+      const BIOMES = [
+        {
+          id: 'catacombs',
+          name: 'Забытые Катакомбы Синего Эфира',
+          floors: [1, 2, 3],
+          color: '#06b6d4',
+          glow: 'rgba(6, 182, 212, 0.35)',
+          bgGrad: 'radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.16) 0%, transparent 65%), radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.95) 0%, #060a12 100%)',
+          particleColor: '#06b6d4'
+        },
+        {
+          id: 'fungal_depths',
+          name: 'Изумрудные Грибные Топи',
+          floors: [4, 5, 6],
+          color: '#10b981',
+          glow: 'rgba(16, 185, 129, 0.35)',
+          bgGrad: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.16) 0%, transparent 65%), radial-gradient(circle at 50% 100%, rgba(6, 78, 59, 0.8) 0%, #03140e 100%)',
+          particleColor: '#34d399'
+        },
+        {
+          id: 'magma_rift',
+          name: 'Теплый Обсидиановый Разлом',
+          floors: [7, 8, 9],
+          color: '#f97316',
+          glow: 'rgba(249, 115, 22, 0.35)',
+          bgGrad: 'radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.15) 0%, transparent 65%), radial-gradient(circle at 50% 100%, rgba(69, 26, 3, 0.8) 0%, #0c0806 100%)',
+          particleColor: '#fb923c'
+        },
+        {
+          id: 'pantheon',
+          name: 'Кристальный Пантеон Вечности',
+          floors: [10],
+          color: '#a855f7',
+          glow: 'rgba(168, 85, 247, 0.4)',
+          bgGrad: 'radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.18) 0%, transparent 65%), radial-gradient(circle at 50% 100%, rgba(46, 16, 101, 0.8) 0%, #06030c 100%)',
+          particleColor: '#c084fc'
+        }
+      ];
+
+      function getCurrentBiome(fl) {
+        if (fl <= 3) return BIOMES[0];
+        if (fl <= 6) return BIOMES[1];
+        if (fl <= 9) return BIOMES[2];
+        return BIOMES[3];
+      }
+
+      /* ----------------------------------------------------------------------
+         3. ЗАКЛИНАНИЯ И ГРИМУАР (СТРОГАЯ ИЗОЛЯЦИЯ И СИСТЕМА ИЗУЧЕНИЯ)
+         ---------------------------------------------------------------------- */
+      const ALL_SKILLS = [
+        {
+          id: 'blood_strike',
+          name: 'Удар Крови',
+          mpCost: 10,
+          spCost: 1,
+          desc: '180% рубящего урона + восстанавливает 25% от нанесенного урона.',
+          classOwner: 'warrior'
+        },
+        {
+          id: 'chain_lightning',
+          name: 'Цепная Молния',
+          mpCost: 16,
+          spCost: 1,
+          desc: 'Эфирный разряд молнии, пробивающий 50% брони противника.',
+          classOwner: 'mage'
+        },
+        {
+          id: 'shadow_ambush',
+          name: 'Теневая Засада',
+          mpCost: 12,
+          spCost: 1,
+          desc: 'Смертоносный выпад из невидимости с гарантированным критом x2.2.',
+          classOwner: 'rogue'
+        },
+        {
+          id: 'flame_burst',
+          name: 'Огненный Всплеск',
+          mpCost: 14,
+          spCost: 1,
+          desc: 'Яростный взрыв пламени, наносящий 200% магического урона.',
+          classOwner: null
+        },
+        {
+          id: 'frost_nova',
+          name: 'Ледяная Нова',
+          mpCost: 15,
+          spCost: 1,
+          desc: 'Замораживает монстра, снижая его следующую контратаку на 60%.',
+          classOwner: null
+        },
+        {
+          id: 'life_drain',
+          name: 'Похищение Жизни',
+          mpCost: 12,
+          spCost: 1,
+          desc: 'Выкачивает темную энергию врага, восстанавливая здоровье.',
+          classOwner: null
+        },
+        {
+          id: 'crystal_barrier',
+          name: 'Кристальный Барьер',
+          mpCost: 18,
+          spCost: 1,
+          desc: 'Создает силовой барьер, поглощающий 35 урона.',
+          classOwner: null
+        }
+      ];
+
+      /* ----------------------------------------------------------------------
+         4. КЛАССЫ С ИЗОЛИРОВАННЫМИ НАЧАЛЬНЫМИ ЗАКЛИНАНИЯМИ
+         ---------------------------------------------------------------------- */
+      const HERO_CLASSES = {
+        warrior: {
+          id: 'warrior',
+          name: 'Воин',
+          title: 'Падший Рыцарь Ордена Крови',
+          desc: 'Мастер ближнего боя с высоким HP и стальным щитом.',
+          baseHp: 130,
+          baseMp: 25,
+          baseAtk: 16,
+          baseDef: 10,
+          uniqueSkillId: 'blood_strike',
+          starterSkills: ['blood_strike'], // ТОЛЬКО «Удар Крови»!
+          starterGear: {
+            weapon: { id: 'sword_broad', name: 'Закаленный Палаш', slot: 'weapon', atkBonus: 6, defBonus: 1, hpBonus: 0, visualId: 'sword_1' },
+            shield: { id: 'shield_wood', name: 'Окованный Баклер', slot: 'shield', atkBonus: 0, defBonus: 4, hpBonus: 15, visualId: 'shield_1' },
+            helmet: { id: 'helm_iron', name: 'Ржавый Бацинет', slot: 'helmet', atkBonus: 0, defBonus: 3, hpBonus: 10, visualId: 'helm_1' },
+            armor: { id: 'armor_mail', name: 'Кольчуга Наемника', slot: 'armor', atkBonus: 1, defBonus: 5, hpBonus: 20, visualId: 'armor_1' }
+          },
+          introStory: [
+            'Ваш орден пал в осажденной крепости под градом стрел имперской инквизиции.',
+            'Лишь вы выжили в резне, сжимая в руках зазубренный бастард и треснувший щит с древним гербом.',
+            'Слухи о древнем Кристалле Эха ведут вас в катакомбы. Недра заплатят за кровь павших братьев.'
+          ]
+        },
+        mage: {
+          id: 'mage',
+          name: 'Маг',
+          title: 'Отступник Эфирной Академии',
+          desc: 'Владыка стихий с огромным запасом маны и разрушительными заклинаниями.',
+          baseHp: 85,
+          baseMp: 65,
+          baseAtk: 12,
+          baseDef: 5,
+          uniqueSkillId: 'chain_lightning',
+          starterSkills: ['chain_lightning'], // ТОЛЬКО «Цепная Молния»!
+          starterGear: {
+            weapon: { id: 'sword_flame', name: 'Пламенеющий Эсток', slot: 'weapon', atkBonus: 12, defBonus: 2, hpBonus: 10, visualId: 'sword_2' },
+            shield: { id: 'shield_wood', name: 'Эфирный Ореол', slot: 'shield', atkBonus: 0, defBonus: 4, hpBonus: 15, visualId: 'shield_1' },
+            helmet: { id: 'helm_iron', name: 'Капюшон Эфира', slot: 'helmet', atkBonus: 0, defBonus: 3, hpBonus: 10, visualId: 'helm_1' },
+            armor: { id: 'armor_mail', name: 'Мантия Ученика', slot: 'armor', atkBonus: 1, defBonus: 5, hpBonus: 20, visualId: 'armor_1' }
+          },
+          introStory: [
+            'Архимаги Академии сожгли ваши рукописи, назвав исследования темного эфира опасной ересью.',
+            'Вы бежали в глубины заброшенных шахт, следуя за пульсирующим шепотом кристального ядра.',
+            'Здесь, под толщей камня, спит Кристальное Сердце. Его сила вознесет вас над презренными магистрами.'
+          ]
+        },
+        rogue: {
+          id: 'rogue',
+          name: 'Разбойник',
+          title: 'Теневой Клинок Трущоб',
+          desc: 'Смертоносный охотник из засады с шансом критического удара 32%.',
+          baseHp: 100,
+          baseMp: 35,
+          baseAtk: 18,
+          baseDef: 6,
+          uniqueSkillId: 'shadow_ambush',
+          starterSkills: ['shadow_ambush'], // ТОЛЬКО «Теневая Засада»!
+          starterGear: {
+            weapon: { id: 'sword_broad', name: 'Отравленный Стилет', slot: 'weapon', atkBonus: 6, defBonus: 1, hpBonus: 0, visualId: 'sword_1' },
+            shield: { id: 'shield_wood', name: 'Баклер Убийцы', slot: 'shield', atkBonus: 0, defBonus: 4, hpBonus: 15, visualId: 'shield_1' },
+            helmet: { id: 'helm_iron', name: 'Маска Тени', slot: 'helmet', atkBonus: 0, defBonus: 3, hpBonus: 10, visualId: 'helm_1' },
+            armor: { id: 'armor_mail', name: 'Кожаная Бригантина', slot: 'armor', atkBonus: 1, defBonus: 5, hpBonus: 20, visualId: 'armor_1' }
+          },
+          introStory: [
+            'Карту этого склепа вы срезали с пояса культиста в темном переулке столичного квартала.',
+            'В древних записях указаны сокровищницы владык древности и корона Титана, стоящая целых королевств.',
+            'Пусть глупцы верят в проклятия катакомб — ваши быстрые клинки проложат дорогу к несметным богатствам.'
+          ]
+        }
+      };
+
+      /* ----------------------------------------------------------------------
+         5. ДРОП СНАРЯЖЕНИЯ С МОНСТРОВ
+         ---------------------------------------------------------------------- */
+      const GEAR_DROP_POOL = [
+        { id: 'helm_iron', name: 'Ржавый Бацинет', slot: 'helmet', atkBonus: 0, defBonus: 3, hpBonus: 10, tier: 1, visualId: 'helm_1' },
+        { id: 'helm_winged', name: 'Крылатый Шлем Паладина', slot: 'helmet', atkBonus: 2, defBonus: 6, hpBonus: 25, tier: 2, visualId: 'helm_2' },
+        { id: 'helm_demonic', name: 'Рогатый Венец Бездны', slot: 'helmet', atkBonus: 5, defBonus: 10, hpBonus: 45, tier: 3, visualId: 'helm_3' },
+
+        { id: 'shield_wood', name: 'Окованный Баклер', slot: 'shield', atkBonus: 0, defBonus: 4, hpBonus: 15, tier: 1, visualId: 'shield_1' },
+        { id: 'shield_kite', name: 'Башенный Щит Инквизиции', slot: 'shield', atkBonus: 1, defBonus: 9, hpBonus: 35, tier: 2, visualId: 'shield_2' },
+        { id: 'shield_aegis', name: 'Эгида Древнего Титана', slot: 'shield', atkBonus: 4, defBonus: 15, hpBonus: 60, tier: 3, visualId: 'shield_3' },
+
+        { id: 'sword_broad', name: 'Закаленный Палаш', slot: 'weapon', atkBonus: 6, defBonus: 1, hpBonus: 0, tier: 1, visualId: 'sword_1' },
+        { id: 'sword_flame', name: 'Пламенеющий Эсток', slot: 'weapon', atkBonus: 12, defBonus: 2, hpBonus: 10, tier: 2, visualId: 'sword_2' },
+        { id: 'sword_abyss', name: 'Клинок Погибели Бездны', slot: 'weapon', atkBonus: 20, defBonus: 4, hpBonus: 25, tier: 3, visualId: 'sword_3' },
+
+        { id: 'armor_mail', name: 'Кольчуга Наемника', slot: 'armor', atkBonus: 1, defBonus: 5, hpBonus: 20, tier: 1, visualId: 'armor_1' },
+        { id: 'armor_plate', name: 'Вороненые Латы Крестоносца', slot: 'armor', atkBonus: 2, defBonus: 11, hpBonus: 50, tier: 2, visualId: 'armor_2' },
+        { id: 'armor_dread', name: 'Обсидиановый Панцирь Смерти', slot: 'armor', atkBonus: 5, defBonus: 18, hpBonus: 90, tier: 3, visualId: 'armor_3' },
+      ];
+
+      function rollEquipmentDrop(floor) {
+        if (Math.random() > 0.40) return null;
+        const maxTier = floor <= 3 ? 1 : floor <= 7 ? 2 : 3;
+        const eligible = GEAR_DROP_POOL.filter(item => item.tier <= maxTier);
+        return eligible[Math.floor(Math.random() * eligible.length)];
+      }
+
+      /* ----------------------------------------------------------------------
+         6. PAPER DOLL ВЕКТОРНЫЙ АВАТАР ГЕРОЯ
+         ---------------------------------------------------------------------- */
+      function renderPaperDoll(heroData) {
+        const weapon = heroData.gear?.weapon?.visualId || 'sword_1';
+        const shield = heroData.gear?.shield?.visualId || 'shield_1';
+        const helmet = heroData.gear?.helmet?.visualId || 'helm_1';
+        const armor = heroData.gear?.armor?.visualId || 'armor_1';
+
+        let swordSvg = '';
+        if (weapon === 'sword_3') {
+          swordSvg = `
+            <path d="M125 105 L150 40 L140 38 L118 100 Z" fill="#7c3aed" stroke="#c084fc" stroke-width="2" filter="drop-shadow(0 0 6px #a855f7)"/>
+            <polygon points="120,105 130,105 125,120" fill="#f59e0b"/>
+          `;
+        } else if (weapon === 'sword_2') {
+          swordSvg = `
+            <path d="M125 105 L145 45 L138 42 L118 100 Z" fill="#ef4444" stroke="#f59e0b" stroke-width="2" filter="drop-shadow(0 0 6px #f97316)"/>
+            <line x1="110" y1="102" x2="135" y2="105" stroke="#f59e0b" stroke-width="3"/>
+          `;
+        } else {
+          swordSvg = `
+            <path d="M125 105 L142 50 L135 48 L118 100 Z" fill="#cbd5e1" stroke="#475569" stroke-width="1.8"/>
+            <line x1="112" y1="102" x2="132" y2="105" stroke="#06b6d4" stroke-width="2.5"/>
+          `;
+        }
+
+        let shieldSvg = '';
+        if (shield === 'shield_3') {
+          shieldSvg = `
+            <polygon points="20,80 48,70 52,130 20,140 12,100" fill="#1e1b4b" stroke="#06b6d4" stroke-width="2.5" filter="drop-shadow(0 0 8px #06b6d4)"/>
+            <polygon points="26,88 42,82 44,124 22,130" fill="#7c3aed"/>
+          `;
+        } else if (shield === 'shield_2') {
+          shieldSvg = `
+            <polygon points="18,75 48,75 44,135 33,145 18,135" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+            <line x1="33" y1="80" x2="33" y2="140" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="22" y1="95" x2="44" y2="95" stroke="#f59e0b" stroke-width="2.5"/>
+          `;
+        } else {
+          shieldSvg = `
+            <circle cx="32" cy="105" r="18" fill="#1e293b" stroke="#06b6d4" stroke-width="2.5"/>
+            <circle cx="32" cy="105" r="6" fill="#f59e0b"/>
+          `;
+        }
+
+        let helmetSvg = '';
+        if (helmet === 'helm_3') {
+          helmetSvg = `
+            <path d="M60 48 C60 28, 100 28, 100 48 L96 70 L64 70 Z" fill="#0f172a" stroke="#c084fc" stroke-width="2"/>
+            <path d="M60 42 Q45 20 40 32 Q54 36 62 44" fill="#7c3aed" stroke="#c084fc" stroke-width="1.5"/>
+            <path d="M100 42 Q115 20 120 32 Q106 36 98 44" fill="#7c3aed" stroke="#c084fc" stroke-width="1.5"/>
+            <line x1="68" y1="54" x2="92" y2="54" stroke="#f43f5e" stroke-width="3" filter="drop-shadow(0 0 4px #f43f5e)"/>
+          `;
+        } else if (helmet === 'helm_2') {
+          helmetSvg = `
+            <path d="M62 48 C62 30, 98 30, 98 48 L94 72 L66 72 Z" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
+            <polygon points="56,36 48,16 66,32" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
+            <polygon points="104,36 112,16 94,32" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
+            <line x1="72" y1="55" x2="88" y2="55" stroke="#f59e0b" stroke-width="2.5"/>
+          `;
+        } else {
+          helmetSvg = `
+            <path d="M64 50 C64 34, 96 34, 96 50 L92 72 L68 72 Z" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+            <line x1="70" y1="58" x2="90" y2="58" stroke="#38bdf8" stroke-width="2"/>
+          `;
+        }
+
+        let armorSvg = '';
+        if (armor === 'armor_3') {
+          armorSvg = `
+            <polygon points="52,70 108,70 98,140 62,140" fill="#090d16" stroke="#c084fc" stroke-width="2.5"/>
+            <polygon points="40,70 56,66 52,86" fill="#1e1b4b" stroke="#c084fc" stroke-width="1.5"/>
+            <polygon points="120,70 104,66 108,86" fill="#1e1b4b" stroke="#c084fc" stroke-width="1.5"/>
+            <polygon points="80,90 90,102 80,114 70,102" fill="#f43f5e" filter="drop-shadow(0 0 6px #f43f5e)"/>
+          `;
+        } else if (armor === 'armor_2') {
+          armorSvg = `
+            <polygon points="54,72 106,72 96,140 64,140" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+            <polygon points="44,72 56,68 54,85" fill="#334155" stroke="#38bdf8" stroke-width="1.5"/>
+            <polygon points="116,72 104,68 106,85" fill="#334155" stroke="#38bdf8" stroke-width="1.5"/>
+            <line x1="80" y1="76" x2="80" y2="135" stroke="#06b6d4" stroke-width="2"/>
+          `;
+        } else {
+          armorSvg = `
+            <polygon points="56,72 104,72 94,140 66,140" fill="#182238" stroke="#64748b" stroke-width="2"/>
+            <path d="M58 85 L102 85 M60 105 L100 105 M62 125 L98 125" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+          `;
+        }
+
+        return `
+          <svg viewBox="0 0 160 200" width="100%" height="100%" fill="none">
+            <path d="M54 75 Q80 85 106 75 L118 175 Q80 185 42 175 Z" fill="#1e1b4b" stroke="#38bdf8" stroke-width="1.5"/>
+            <rect x="64" y="140" width="12" height="48" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <rect x="84" y="140" width="12" height="48" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <path d="M52 75 L30 105" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+            <path d="M108 75 L125 105" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+            ${armorSvg}
+            ${helmetSvg}
+            ${shieldSvg}
+            ${swordSvg}
+          </svg>
+        `;
+      }
+
+      /* ----------------------------------------------------------------------
+         7. СЛУЧАЙНЫЕ СОБЫТИЯ
+         ---------------------------------------------------------------------- */
+      const DUNGEON_EVENTS = [
+        {
+          id: 'altar',
+          title: 'Оскверненный Алтарь Крови',
+          desc: 'В центре зала возвышается черный монолит, покрытый запекшейся кровью. Вы чувствуете пульсацию нечестивой мощи.',
+          artSvg: `
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <polygon points="20,70 60,70 54,30 26,30" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+              <polygon points="24,30 56,30 60,20 20,20" fill="#881337" stroke="#f59e0b" stroke-width="1.5"/>
+              <circle cx="40" cy="45" r="7" fill="#f43f5e" filter="drop-shadow(0 0 6px #f43f5e)"/>
+            </svg>
+          `,
+          options: [
+            { label: 'Пожертвовать 20 HP ради опыта (+80 EXP)', action: 'sacrifice_hp' },
+            { label: 'Очистить рунами веры (Расход: 15 MP)', action: 'cleanse_mp' },
+            { label: 'Пройти мимо с осторожностью', action: 'ignore' }
+          ]
+        },
+        {
+          id: 'locked_chest',
+          title: 'Запертый Саркофаг с Печатью',
+          desc: 'Тяжелый каменный ларец закован в цепи с массивным навесным замком. От него веет древним металлом.',
+          artSvg: `
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <rect x="18" y="34" width="44" height="28" fill="#182238" stroke="#06b6d4" stroke-width="2"/>
+              <path d="M18 34 Q40 22 62 34 Z" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
+              <circle cx="40" cy="48" r="4" fill="#f59e0b"/>
+            </svg>
+          `,
+          options: [
+            { label: 'Использовать отмычку (Шанс 75% на трофей)', action: 'pick_lock' },
+            { label: 'Разбить замок силой (риск получить 15 урона)', action: 'bash_lock' },
+            { label: 'Оставить замок в покое', action: 'ignore' }
+          ]
+        },
+        {
+          id: 'trap',
+          title: 'Скрытая Растяжка в Полумраке',
+          desc: 'Щелчок под сапогом! Со свода пещеры срывается тяжелое лезвие маятника и град стрел!',
+          artSvg: `
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <line x1="40" y1="10" x2="40" y2="50" stroke="#94a3b8" stroke-width="2"/>
+              <path d="M25 50 Q40 70 55 50 Z" fill="#1e1b4b" stroke="#f43f5e" stroke-width="2"/>
+            </svg>
+          `,
+          options: [
+            { label: 'Сделать резкий кувырок вперед (Ловкость)', action: 'dodge_trap' },
+            { label: 'Принять удар на доспех и щит (Защита)', action: 'shield_trap' }
+          ]
+        },
+        {
+          id: 'shrine',
+          title: 'Чаша Синего Пламени Эфира',
+          desc: 'Каменная чаша горит холодным мистическим огнем. Жидкость внутри нее светится первозданной энергией.',
+          artSvg: `
+            <svg viewBox="0 0 80 80" width="60" height="60" fill="none">
+              <path d="M26 60 Q40 68 54 60 L50 40 L30 40 Z" fill="#1e1b4b" stroke="#38bdf8" stroke-width="2"/>
+              <circle cx="40" cy="30" r="10" fill="#38bdf8" filter="drop-shadow(0 0 8px #38bdf8)"/>
+            </svg>
+          `,
+          options: [
+            { label: 'Испить из чаши (+Полное восстановление MP)', action: 'drink_shrine' },
+            { label: 'Омыть клинок (+4 к атаке на текущий этаж)', action: 'bless_weapon' }
+          ]
+        }
+      ];
+
+      /* ----------------------------------------------------------------------
+         8. WEB AUDIO API: ПРИЯТНЫЙ ЭМБИЕНТ-СИНТЕЗАТОР И ЗВУКОВЫЕ ЭФФЕКТЫ
+         ---------------------------------------------------------------------- */
+      let audioCtx = null;
+      let isSoundMuted = localStorage.getItem('crystal_sound_muted') === 'true';
+      let isMusicMuted = localStorage.getItem('crystal_music_muted') === 'true';
+
+      // Мастер-узлы музыки
+      let musicMasterGain = null;
+      let musicFilter = null;
+      let musicDelayNode = null;
+      let musicFeedbackGain = null;
+      let isMusicPlaying = false;
+      let musicIntervalTimer = null;
+      let chimesIntervalTimer = null;
+      let combatPulseTimer = null;
+      let currentChordStep = 0;
+      let isCombatMood = false;
+
+      // Темы биомов для мягкой процедурной музыки
+      const MUSIC_THEMES = {
+        catacombs: {
+          id: 'catacombs',
+          name: 'Эфирный Покой',
+          keyName: 'D Dorian',
+          // Теплые бархатные аккорды (Dm9 -> Bbmaj7 -> C9 -> Dm11)
+          chords: [
+            [146.83, 220.00, 261.63, 329.63], // D3, A3, C4, E4
+            [116.54, 174.61, 220.00, 293.66], // Bb2, F3, A3, D4
+            [130.81, 196.00, 261.63, 293.66], // C3, G3, C4, D4
+            [146.83, 220.00, 329.63, 392.00]  // D3, A3, E4, G4
+          ],
+          droneRoot: 73.42, // D2
+          chimesScale: [293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33, 659.25],
+          chordDuration: 7.2
+        },
+        fungal_depths: {
+          id: 'fungal_depths',
+          name: 'Изумрудный Сон',
+          keyName: 'E Aeolian',
+          // Мистические переливы (Em9 -> Cmaj7 -> Am9 -> Bm7)
+          chords: [
+            [164.81, 246.94, 293.66, 392.00], // E3, B3, D4, G4
+            [130.81, 196.00, 246.94, 329.63], // C3, G3, B3, E4
+            [110.00, 164.81, 220.00, 293.66], // A2, E3, A3, D4
+            [123.47, 185.00, 246.94, 293.66]  // B2, F#3, B3, D4
+          ],
+          droneRoot: 82.41, // E2
+          chimesScale: [329.63, 392.00, 440.00, 493.88, 587.33, 659.25, 783.99],
+          chordDuration: 7.8
+        },
+        magma_rift: {
+          id: 'magma_rift',
+          name: 'Теплый Бархат',
+          keyName: 'C Minor',
+          // Глубокие янтарные созвучия (Cm9 -> Abmaj7 -> Fm9 -> Gsus4)
+          chords: [
+            [130.81, 196.00, 233.08, 311.13], // C3, G3, Bb3, Eb4
+            [103.83, 155.56, 207.65, 261.63], // Ab2, Eb3, Ab3, C4
+            [87.31, 130.81, 174.61, 233.08],  // F2, C3, F3, Bb3
+            [98.00, 146.83, 196.00, 261.63]   // G2, D3, G3, C4
+          ],
+          droneRoot: 65.41, // C2
+          chimesScale: [261.63, 311.13, 349.23, 392.00, 466.16, 523.25, 622.25],
+          chordDuration: 6.8
+        },
+        pantheon: {
+          id: 'pantheon',
+          name: 'Сияние Вечности',
+          keyName: 'A Minor / Lydian',
+          // Небесные кристальные гармонии (Am9 -> Fmaj7#11 -> Dsus2 -> Em7)
+          chords: [
+            [110.00, 220.00, 261.63, 329.63], // A2, A3, C4, E4
+            [87.31, 174.61, 246.94, 329.63],  // F2, F3, B3, E4
+            [146.83, 220.00, 293.66, 329.63], // D3, A3, D4, E4
+            [164.81, 246.94, 293.66, 392.00]  // E3, B3, D4, G4
+          ],
+          droneRoot: 110.00, // A2
+          chimesScale: [440.00, 493.88, 523.25, 659.25, 783.99, 880.00, 987.77],
+          chordDuration: 8.2
+        }
+      };
+
+      function getMusicTheme(floor) {
+        if (!floor || floor <= 3) return MUSIC_THEMES.catacombs;
+        if (floor <= 6) return MUSIC_THEMES.fungal_depths;
+        if (floor <= 9) return MUSIC_THEMES.magma_rift;
+        return MUSIC_THEMES.pantheon;
+      }
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        if (audioCtx && !musicMasterGain) {
+          // Мастер-громкость фоновой музыки с мягким выходом
+          musicMasterGain = audioCtx.createGain();
+          const targetVol = isMusicMuted ? 0.0001 : 0.22;
+          musicMasterGain.gain.setValueAtTime(targetVol, audioCtx.currentTime);
+
+          // Теплый аналоговый низкочастотный фильтр (убирает любой резкий синтезаторный скрежет)
+          musicFilter = audioCtx.createBiquadFilter();
+          musicFilter.type = 'lowpass';
+          musicFilter.frequency.setValueAtTime(680, audioCtx.currentTime);
+          musicFilter.Q.setValueAtTime(1.4, audioCtx.currentTime);
+
+          // Пространственный дилей / реверберация подземелья
+          musicDelayNode = audioCtx.createDelay(1.5);
+          musicDelayNode.delayTime.setValueAtTime(0.36, audioCtx.currentTime);
+
+          musicFeedbackGain = audioCtx.createGain();
+          musicFeedbackGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+          const delayDampFilter = audioCtx.createBiquadFilter();
+          delayDampFilter.type = 'lowpass';
+          delayDampFilter.frequency.setValueAtTime(500, audioCtx.currentTime);
+
+          // Сборка шины пространственного эха
+          musicDelayNode.connect(delayDampFilter);
+          delayDampFilter.connect(musicFeedbackGain);
+          musicFeedbackGain.connect(musicDelayNode);
+          musicFeedbackGain.connect(musicMasterGain);
+
+          musicFilter.connect(musicMasterGain);
+          musicMasterGain.connect(audioCtx.destination);
+        }
+      }
+
+      function playAmbientChord(theme) {
+        if (!audioCtx || isMusicMuted) return;
+        try {
+          const now = audioCtx.currentTime;
+          const chords = theme.chords;
+          const chord = chords[currentChordStep % chords.length];
+          currentChordStep++;
+
+          const chordDuration = theme.chordDuration || 7.5;
+          const attack = 2.4;
+          const release = 2.8;
+
+          // Создаем мягкие пэды для каждого тона аккорда
+          chord.forEach((freq, idx) => {
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(freq, now);
+
+            // Второй осциллятор с легким расстроением для бархатного хорового стерео-эффекта
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(freq * 1.0025, now);
+
+            const voiceGain = audioCtx.createGain();
+            const targetVol = idx === 0 ? 0.035 : 0.028;
+
+            voiceGain.gain.setValueAtTime(0.0001, now);
+            voiceGain.gain.linearRampToValueAtTime(targetVol, now + attack);
+            voiceGain.gain.setValueAtTime(targetVol, now + chordDuration - release);
+            voiceGain.gain.linearRampToValueAtTime(0.0001, now + chordDuration);
+
+            osc1.connect(voiceGain);
+            osc2.connect(voiceGain);
+            voiceGain.connect(musicFilter);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + chordDuration + 0.1);
+            osc2.stop(now + chordDuration + 0.1);
+          });
+
+          // Мягкий глубокий суб-бас
+          const subOsc = audioCtx.createOscillator();
+          const subGain = audioCtx.createGain();
+          subOsc.type = 'sine';
+          subOsc.frequency.setValueAtTime(theme.droneRoot || 73.42, now);
+
+          subGain.gain.setValueAtTime(0.0001, now);
+          subGain.gain.linearRampToValueAtTime(0.045, now + attack * 0.8);
+          subGain.gain.setValueAtTime(0.045, now + chordDuration - release);
+          subGain.gain.linearRampToValueAtTime(0.0001, now + chordDuration);
+
+          subOsc.connect(subGain);
+          subGain.connect(musicMasterGain);
+
+          subOsc.start(now);
+          subOsc.stop(now + chordDuration + 0.1);
+        } catch(e) {}
+      }
+
+      function triggerCrystalChime(theme) {
+        if (!audioCtx || isMusicMuted) return;
+        try {
+          const now = audioCtx.currentTime;
+          const scale = theme.chimesScale;
+          const noteFreq = scale[Math.floor(Math.random() * scale.length)];
+
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(noteFreq, now);
+
+          // Очень мягкая атака и долгое мечтательное угасание
+          const chimeVol = 0.045 + Math.random() * 0.02;
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(chimeVol, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+
+          osc.connect(gain);
+          gain.connect(musicFilter);
+          if (musicDelayNode) gain.connect(musicDelayNode);
+
+          osc.start(now);
+          osc.stop(now + 1.9);
+        } catch(e) {}
+      }
+
+      function triggerCombatPulse() {
+        if (!audioCtx || isMusicMuted || !isCombatMood) return;
+        try {
+          const now = audioCtx.currentTime;
+          const kickOsc = audioCtx.createOscillator();
+          const kickGain = audioCtx.createGain();
+          kickOsc.type = 'sine';
+          kickOsc.frequency.setValueAtTime(80, now);
+          kickOsc.frequency.exponentialRampToValueAtTime(38, now + 0.14);
+
+          kickGain.gain.setValueAtTime(0.06, now);
+          kickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+          kickOsc.connect(kickGain);
+          kickGain.connect(musicMasterGain);
+          kickOsc.start(now);
+          kickOsc.stop(now + 0.15);
+        } catch(e) {}
+      }
+
+      function startBackgroundMusic() {
+        initAudio();
+        if (!audioCtx) return;
+        if (isMusicPlaying) return;
+        isMusicPlaying = true;
+
+        const currentFloor = (typeof hero !== 'undefined' && hero.floor) ? hero.floor : 1;
+        const theme = getMusicTheme(currentFloor);
+        updateMusicTrackUI(theme);
+
+        // Первый аккорд
+        playAmbientChord(theme);
+
+        // Интервал смены гармоний
+        clearInterval(musicIntervalTimer);
+        musicIntervalTimer = setInterval(() => {
+          if (!isMusicMuted && isMusicPlaying) {
+            const curTheme = getMusicTheme((typeof hero !== 'undefined' && hero.floor) ? hero.floor : 1);
+            playAmbientChord(curTheme);
+          }
+        }, (theme.chordDuration || 7.2) * 1000 - 400);
+
+        // Звонкие хрустальные капли/перезвоны через полуслучайные промежутки
+        clearTimeout(chimesIntervalTimer);
+        const scheduleNextChime = () => {
+          if (!isMusicPlaying) return;
+          const delay = 1800 + Math.random() * 2200;
+          chimesIntervalTimer = setTimeout(() => {
+            if (!isMusicMuted && isMusicPlaying) {
+              const curTheme = getMusicTheme((typeof hero !== 'undefined' && hero.floor) ? hero.floor : 1);
+              triggerCrystalChime(curTheme);
+            }
+            scheduleNextChime();
+          }, delay);
+        };
+        scheduleNextChime();
+
+        // Боевой ритмический пульс
+        clearInterval(combatPulseTimer);
+        combatPulseTimer = setInterval(() => {
+          if (isCombatMood) triggerCombatPulse();
+        }, 1300);
+      }
+
+      function stopBackgroundMusic() {
+        isMusicPlaying = false;
+        clearInterval(musicIntervalTimer);
+        clearTimeout(chimesIntervalTimer);
+        clearInterval(combatPulseTimer);
+        if (musicMasterGain && audioCtx) {
+          const now = audioCtx.currentTime;
+          musicMasterGain.gain.setValueAtTime(musicMasterGain.gain.value, now);
+          musicMasterGain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+        }
+      }
+
+      function toggleMusic() {
+        isMusicMuted = !isMusicMuted;
+        localStorage.setItem('crystal_music_muted', isMusicMuted ? 'true' : 'false');
+        renderMusicIcon();
+
+        if (!isMusicMuted) {
+          initAudio();
+          if (musicMasterGain && audioCtx) {
+            const now = audioCtx.currentTime;
+            musicMasterGain.gain.setValueAtTime(musicMasterGain.gain.value, now);
+            musicMasterGain.gain.linearRampToValueAtTime(0.22, now + 0.5);
+          }
+          if (!isMusicPlaying) {
+            startBackgroundMusic();
+          }
+        } else {
+          if (musicMasterGain && audioCtx) {
+            const now = audioCtx.currentTime;
+            musicMasterGain.gain.setValueAtTime(musicMasterGain.gain.value, now);
+            musicMasterGain.gain.linearRampToValueAtTime(0.0001, now + 0.5);
+          }
+        }
+      }
+
+      function setCombatMood(inCombat) {
+        isCombatMood = inCombat;
+        if (musicFilter && audioCtx) {
+          const now = audioCtx.currentTime;
+          musicFilter.frequency.setValueAtTime(musicFilter.frequency.value, now);
+          musicFilter.frequency.linearRampToValueAtTime(inCombat ? 820 : 680, now + 1.0);
+        }
+      }
+
+      function updateMusicTrackUI(theme) {
+        const titleEl = document.getElementById('music-track-title');
+        if (titleEl && theme) {
+          titleEl.textContent = `♫ ${theme.name}`;
+          titleEl.title = `Текущий эмбиент: ${theme.name} (${theme.keyName})`;
+        }
+      }
+
+      function soundClick() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(480, t);
+          osc.frequency.exponentialRampToValueAtTime(200, t + 0.04);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.045);
+        } catch (e) {}
+      }
+
+      function soundHit() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime;
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, t);
+          osc.frequency.exponentialRampToValueAtTime(32, t + 0.18);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.19);
+        } catch (e) {}
+      }
+
+      function soundCrit() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime;
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(280, t);
+          osc.frequency.exponentialRampToValueAtTime(50, t + 0.25);
+          gain.gain.setValueAtTime(0.35, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.26);
+        } catch (e) {}
+      }
+
+      function soundVictory() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const t = audioCtx.currentTime + idx * 0.08;
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.26);
+          });
+        } catch (e) {}
+      }
+
+      function soundPotion() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const pitches = [523.25, 659.25, 783.99, 1046.50];
+          pitches.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const t = audioCtx.currentTime + idx * 0.06;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.15);
+          });
+        } catch (e) {}
+      }
+
+      function soundLootDrop() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const notes = [587.33, 880.00, 1174.66];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const t = audioCtx.currentTime + idx * 0.08;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.25, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.31);
+          });
+        } catch (e) {}
+      }
+
+      function soundSpell() {
+        if (isSoundMuted) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, t);
+          osc.frequency.linearRampToValueAtTime(880, t + 0.1);
+          osc.frequency.linearRampToValueAtTime(1320, t + 0.22);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.28);
+        } catch (e) {}
+      }
+
+      /* ----------------------------------------------------------------------
+         9. СОСТОЯНИЕ ГЕРОЯ И PERSISTENCE
+         ---------------------------------------------------------------------- */
+      const SAVE_KEY = 'crystal_echo_synth_v5';
+
+      let selectedClassId = 'warrior';
+
+      const DEFAULT_HERO = {
+        classId: 'warrior',
+        level: 1,
+        hp: 130,
+        maxHp: 130,
+        mp: 25,
+        maxMp: 25,
+        attack: 16,
+        defense: 10,
+        gold: 30,
+        exp: 0,
+        statPoints: 0,
+        skillPoints: 1,
+        floor: 1,
+        room: 1,
+        potions: 2,
+        elixirs: 1,
+        gear: {
+          weapon: { id: 'sword_broad', name: 'Закаленный Палаш', slot: 'weapon', atkBonus: 6, defBonus: 1, hpBonus: 0, tier: 1, visualId: 'sword_1' },
+          shield: { id: 'shield_wood', name: 'Окованный Баклер', slot: 'shield', atkBonus: 0, defBonus: 4, hpBonus: 15, tier: 1, visualId: 'shield_1' },
+          helmet: { id: 'helm_iron', name: 'Ржавый Бацинет', slot: 'helmet', atkBonus: 0, defBonus: 3, hpBonus: 10, tier: 1, visualId: 'helm_1' },
+          armor: { id: 'armor_mail', name: 'Кольчуга Наемника', slot: 'armor', atkBonus: 1, defBonus: 5, hpBonus: 20, tier: 1, visualId: 'armor_1' }
+        },
+        kills: 0,
+        unlockedSkills: ['blood_strike'] // Только один скилл на старте!
+      };
+
+      let hero = JSON.parse(JSON.stringify(DEFAULT_HERO));
+      let currentEnemy = null;
+      let isHeroDefending = false;
+      let combatActive = false;
+
+      function saveProgress() {
+        try {
+          localStorage.setItem(SAVE_KEY, JSON.stringify(hero));
+        } catch (e) {}
+      }
+
+      function loadProgress() {
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && data.level && data.hp > 0) return data;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function clearProgress() {
+        try {
+          localStorage.removeItem(SAVE_KEY);
+        } catch (e) {}
+      }
+
+      function getExpNeeded(lvl) {
+        return Math.round(40 * Math.pow(1.5, lvl - 1));
+      }
+
+      function checkLevelUp() {
+        let needed = getExpNeeded(hero.level);
+        let leveled = false;
+        while (hero.exp >= needed) {
+          hero.exp -= needed;
+          hero.level += 1;
+          hero.statPoints += 3;
+          hero.skillPoints += 1; // +1 SP на изучение заклинаний в гримуаре!
+          hero.maxHp += 15;
+          hero.hp = hero.maxHp;
+          hero.maxMp += 10;
+          hero.mp = hero.maxMp;
+          hero.attack += 2;
+          hero.defense += 1;
+          leveled = true;
+          needed = getExpNeeded(hero.level);
+        }
+        if (leveled) {
+          soundVictory();
+          spawnFloatingText('НОВЫЙ УРОВЕНЬ! (+3 Стата, +1 SP)', 'floating-crit');
+          updateHUD();
+          saveProgress();
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         10. БАЗА МОНСТРОВ ПО БИОМАМ
+         ---------------------------------------------------------------------- */
+      const MONSTERS_POOL = [
+        // 1-3 этажи: Катакомбы Синего Эфира
+        [
+          { modelKey: 'rat', name: 'Кристальная Мышь', title: 'Хищник щелей', hp: 32, atk: 9, def: 2, exp: 25, gold: 15 },
+          { modelKey: 'slime', name: 'Сумрачный Слизень', title: 'Едкая субстанция', hp: 38, atk: 11, def: 3, exp: 30, gold: 18 },
+          { modelKey: 'skeleton', name: 'Каменный Скелет', title: 'Забытый страж руин', hp: 48, atk: 14, def: 5, exp: 38, gold: 24 },
+          { modelKey: 'bat', name: 'Эфирный Упырь', title: 'Вампирический паразит', hp: 42, atk: 13, def: 4, exp: 34, gold: 20 },
+        ],
+        // 4-6 этажи: Изумрудные Грибные Топи
+        [
+          { modelKey: 'goblin', name: 'Гоблин-Шаман', title: 'Служитель ядовитых спор', hp: 72, atk: 18, def: 6, exp: 56, gold: 40 },
+          { modelKey: 'spider', name: 'Пещерный Ткач', title: 'Прядильщик эфира', hp: 84, atk: 22, def: 8, exp: 68, gold: 48 },
+          { modelKey: 'basilisk', name: 'Пещерный Василиск', title: 'Окаменяющий взгляд', hp: 96, atk: 24, def: 12, exp: 78, gold: 56 },
+        ],
+        // 7-9 этажи: Теплый Обсидиановый Разлом
+        [
+          { modelKey: 'golem', name: 'Кристальный Голем', title: 'Оживший монолит', hp: 145, atk: 32, def: 18, exp: 115, gold: 85 },
+          { modelKey: 'basilisk', name: 'Древний Драконий Василиск', title: 'Окаменяющий владыка', hp: 160, atk: 36, def: 16, exp: 135, gold: 105 },
+        ]
+      ];
+
+      /* ----------------------------------------------------------------------
+         11. DOM ССЫЛКИ
+         ---------------------------------------------------------------------- */
+      const screenTitle = document.getElementById('screen-title');
+      const screenClassSelect = document.getElementById('screen-class-select');
+      const screenStoryIntro = document.getElementById('screen-story-intro');
+      const screenExplore = document.getElementById('screen-explore');
+      const screenCombat = document.getElementById('screen-combat');
+      const screenShop = document.getElementById('screen-shop');
+
+      const mainHeroHud = document.getElementById('main-hero-hud');
+      const headerFloorBadge = document.getElementById('header-floor-badge');
+      const biomeBanner = document.getElementById('biome-banner');
+      const bannerBiomeName = document.getElementById('banner-biome-name');
+
+      const hudFloorNum = document.getElementById('hud-floor-num');
+      const hudHpText = document.getElementById('hud-hp-text');
+      const hudHpBar = document.getElementById('hud-hp-bar');
+      const hudMpText = document.getElementById('hud-mp-text');
+      const hudMpBar = document.getElementById('hud-mp-bar');
+      const hudClassName = document.getElementById('hud-class-name');
+      const hudLevelNum = document.getElementById('hud-level-num');
+      const hudAtkNum = document.getElementById('hud-atk-num');
+      const hudDefNum = document.getElementById('hud-def-num');
+      const hudGoldNum = document.getElementById('hud-gold-num');
+      const hudSpNum = document.getElementById('hud-sp-num');
+      const hudPotionCount = document.getElementById('hud-potion-count');
+
+      const btnSoundToggle = document.getElementById('btn-sound-toggle');
+      const soundIconContainer = document.getElementById('sound-icon-container');
+      const btnMusicToggle = document.getElementById('btn-music-toggle');
+      const musicIconContainer = document.getElementById('music-icon-container');
+      const musicTrackPill = document.getElementById('music-track-pill');
+      const musicTrackTitle = document.getElementById('music-track-title');
+      const musicEqBars = document.getElementById('music-eq-bars');
+      const btnRestart = document.getElementById('btn-restart');
+
+      const btnToClassSelect = document.getElementById('btn-to-class-select');
+      const btnContinueGame = document.getElementById('btn-continue-game');
+      const continueFloorText = document.getElementById('continue-floor-text');
+      const btnOpenHelp = document.getElementById('btn-open-help');
+
+      const classCards = document.querySelectorAll('.class-card');
+      const btnBackToMenu = document.getElementById('btn-back-to-menu');
+      const btnConfirmClass = document.getElementById('btn-confirm-class');
+
+      const storyClassTag = document.getElementById('story-class-tag');
+      const storyTitle = document.getElementById('story-title');
+      const storyParagraphs = document.getElementById('story-paragraphs');
+      const btnBeginDescent = document.getElementById('btn-begin-descent');
+
+      const exploreRoomTag = document.getElementById('explore-room-tag');
+      const exploreFloorIndicator = document.getElementById('explore-floor-indicator');
+      const roomVectorStage = document.getElementById('room-vector-stage');
+      const roomNarrative = document.getElementById('room-narrative');
+
+      const btnOpenMap = document.getElementById('btn-open-map');
+      const btnActionForward = document.getElementById('btn-action-forward');
+      const btnActionChest = document.getElementById('btn-action-chest');
+      const btnActionRest = document.getElementById('btn-action-rest');
+      const btnActionShopShortcut = document.getElementById('btn-action-shop-shortcut');
+      const btnActionHero = document.getElementById('btn-action-hero');
+
+      const monsterSvgContainer = document.getElementById('monster-svg-container');
+      const enemyName = document.getElementById('enemy-name');
+      const enemyTitle = document.getElementById('enemy-title');
+      const enemyBossBadge = document.getElementById('enemy-boss-badge');
+      const enemyHpText = document.getElementById('enemy-hp-text');
+      const enemyHpBar = document.getElementById('enemy-hp-bar');
+      const enemyHpGhost = document.getElementById('enemy-hp-ghost');
+      const combatLog = document.getElementById('combat-log');
+      const floatingNumbers = document.getElementById('floating-numbers');
+
+      const btnCombatAttack = document.getElementById('btn-combat-attack');
+      const btnCombatSkillsMenu = document.getElementById('btn-combat-skills-menu');
+      const combatUnlockedSkillsCount = document.getElementById('combat-unlocked-skills-count');
+      const btnCombatHeal = document.getElementById('btn-combat-heal');
+      const btnCombatDefend = document.getElementById('btn-combat-defend');
+      const combatPotionVal = document.getElementById('combat-potion-val');
+
+      const shopGoldDisplay = document.getElementById('shop-gold-display');
+      const shopItemsContainer = document.getElementById('shop-items-container');
+      const btnLeaveShop = document.getElementById('btn-leave-shop');
+
+      const modalHero = document.getElementById('modal-hero');
+      const btnCloseHeroModal = document.getElementById('btn-close-hero-modal');
+      const paperDollContainer = document.getElementById('paper-doll-container');
+      const equipWeaponName = document.getElementById('equip-weapon-name');
+      const equipWeaponBonus = document.getElementById('equip-weapon-bonus');
+      const equipShieldName = document.getElementById('equip-shield-name');
+      const equipShieldBonus = document.getElementById('equip-shield-bonus');
+      const equipHelmetName = document.getElementById('equip-helmet-name');
+      const equipHelmetBonus = document.getElementById('equip-helmet-bonus');
+      const equipArmorName = document.getElementById('equip-armor-name');
+      const equipArmorBonus = document.getElementById('equip-armor-bonus');
+
+      const freePointsCount = document.getElementById('free-points-count');
+      const modalLevel = document.getElementById('modal-level');
+      const modalExp = document.getElementById('modal-exp');
+      const modalMaxHp = document.getElementById('modal-max-hp');
+      const modalMaxMp = document.getElementById('modal-max-mp');
+      const modalAtk = document.getElementById('modal-atk');
+      const modalDef = document.getElementById('modal-def');
+
+      const btnUpgradeHp = document.getElementById('btn-upgrade-hp');
+      const btnUpgradeMp = document.getElementById('btn-upgrade-mp');
+      const btnUpgradeAtk = document.getElementById('btn-upgrade-atk');
+      const btnUpgradeDef = document.getElementById('btn-upgrade-def');
+
+      const modalSpCount = document.getElementById('modal-sp-count');
+      const modalUnlockedSkillsCounter = document.getElementById('modal-unlocked-skills-counter');
+      const grimorieSkillsList = document.getElementById('grimorie-skills-list');
+
+      const modalPotionQty = document.getElementById('modal-potion-qty');
+      const btnUsePotionInventory = document.getElementById('btn-use-potion-inventory');
+      const modalElixirQty = document.getElementById('modal-elixir-qty');
+      const btnUseElixirInventory = document.getElementById('btn-use-elixir-inventory');
+
+      const modalMap = document.getElementById('modal-map');
+      const btnCloseMapModal = document.getElementById('btn-close-map-modal');
+      const mapFloorNumber = document.getElementById('map-floor-number');
+
+      const modalEvent = document.getElementById('modal-event');
+      const eventTitleText = document.getElementById('event-title-text');
+      const eventDescText = document.getElementById('event-desc-text');
+      const eventVectorArt = document.getElementById('event-vector-art');
+      const eventOptionsContainer = document.getElementById('event-options-container');
+
+      const modalCombatSpells = document.getElementById('modal-combat-spells');
+      const btnCloseSpellsModal = document.getElementById('btn-close-spells-modal');
+      const combatSpellsList = document.getElementById('combat-spells-list');
+
+      const modalHelp = document.getElementById('modal-help');
+      const btnCloseHelpModal = document.getElementById('btn-close-help-modal');
+
+      const modalGameover = document.getElementById('modal-gameover');
+      const gameoverFloor = document.getElementById('gameover-floor');
+      const btnGameoverRestart = document.getElementById('btn-gameover-restart');
+
+      const modalVictory = document.getElementById('modal-victory');
+      const btnVictoryRestart = document.getElementById('btn-victory-restart');
+
+      /* ----------------------------------------------------------------------
+         12. ОБНОВЛЕНИЕ БИОМА, ГРИМУАРА И ДИСПЛЕЯ
+         ---------------------------------------------------------------------- */
+      function renderSoundIcon() {
+        if (isSoundMuted) {
+          soundIconContainer.innerHTML = `
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+            </svg>
+          `;
+        } else {
+          soundIconContainer.innerHTML = `
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          `;
+        }
+      }
+
+      function renderMusicIcon() {
+        if (!musicIconContainer) return;
+        if (isMusicMuted) {
+          if (btnMusicToggle) {
+            btnMusicToggle.classList.remove('playing');
+            btnMusicToggle.title = 'Фоновая музыка выключена (нажмите, чтобы включить)';
+          }
+          if (musicEqBars) musicEqBars.style.opacity = '0.25';
+          musicIconContainer.innerHTML = `
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="2" y1="2" x2="22" y2="22"/>
+              <path d="M9 9v9"/>
+              <path d="M9 5l12-2v6"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          `;
+        } else {
+          if (btnMusicToggle) {
+            btnMusicToggle.classList.add('playing');
+            btnMusicToggle.title = 'Фоновая музыка играет (нажмите, чтобы отключить)';
+          }
+          if (musicEqBars) musicEqBars.style.opacity = '1';
+          musicIconContainer.innerHTML = `
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          `;
+        }
+      }
+
+      function updateHUD() {
+        hudFloorNum.textContent = hero.floor;
+        hudHpText.textContent = `${hero.hp} / ${hero.maxHp}`;
+        hudHpBar.style.width = `${Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100))}%`;
+        
+        hudMpText.textContent = `${hero.mp} / ${hero.maxMp}`;
+        hudMpBar.style.width = `${Math.max(0, Math.min(100, (hero.mp / hero.maxMp) * 100))}%`;
+
+        const curClass = HERO_CLASSES[hero.classId] || HERO_CLASSES.warrior;
+        hudClassName.textContent = curClass.name;
+        hudLevelNum.textContent = hero.level;
+
+        // Расчет общей атаки и защиты с учетом снаряжения
+        let totalAtk = hero.attack;
+        let totalDef = hero.defense;
+        if (hero.gear) {
+          if (hero.gear.weapon) totalAtk += hero.gear.weapon.atkBonus || 0;
+          if (hero.gear.shield) totalDef += hero.gear.shield.defBonus || 0;
+          if (hero.gear.helmet) totalDef += hero.gear.helmet.defBonus || 0;
+          if (hero.gear.armor) totalDef += hero.gear.armor.defBonus || 0;
+        }
+        hudAtkNum.textContent = totalAtk;
+        hudDefNum.textContent = totalDef;
+
+        hudGoldNum.textContent = hero.gold;
+        hudSpNum.textContent = hero.skillPoints;
+        hudPotionCount.textContent = hero.potions;
+        combatPotionVal.textContent = hero.potions;
+        combatUnlockedSkillsCount.textContent = (hero.unlockedSkills || []).length;
+
+        // Обновление биома и мягкого фона (не режущего глаз)
+        const biome = getCurrentBiome(hero.floor);
+        document.documentElement.style.setProperty('--biome-color', biome.color);
+        document.documentElement.style.setProperty('--biome-glow', biome.glow);
+        document.documentElement.style.setProperty('--biome-bg', biome.bgGrad);
+        bannerBiomeName.textContent = biome.name;
+        updateMusicTrackUI(getMusicTheme(hero.floor));
+
+        updateHeroModalData();
+      }
+
+      function updateHeroModalData() {
+        modalLevel.textContent = hero.level;
+        modalExp.textContent = `${hero.exp} / ${getExpNeeded(hero.level)}`;
+        modalMaxHp.textContent = hero.maxHp;
+        modalMaxMp.textContent = hero.maxMp;
+        modalAtk.textContent = hero.attack;
+        modalDef.textContent = hero.defense;
+        freePointsCount.textContent = hero.statPoints;
+        modalSpCount.textContent = hero.skillPoints;
+        modalPotionQty.textContent = hero.potions;
+        modalElixirQty.textContent = hero.elixirs;
+
+        // Снаряжение
+        if (hero.gear.weapon) {
+          equipWeaponName.textContent = hero.gear.weapon.name;
+          equipWeaponBonus.textContent = `+${hero.gear.weapon.atkBonus} АТК · ${hero.gear.weapon.tier || 1} Тир`;
+        }
+        if (hero.gear.shield) {
+          equipShieldName.textContent = hero.gear.shield.name;
+          equipShieldBonus.textContent = `+${hero.gear.shield.defBonus} ЗАЩ, +${hero.gear.shield.hpBonus || 0} HP`;
+        }
+        if (hero.gear.helmet) {
+          equipHelmetName.textContent = hero.gear.helmet.name;
+          equipHelmetBonus.textContent = `+${hero.gear.helmet.defBonus} ЗАЩ, +${hero.gear.helmet.hpBonus || 0} HP`;
+        }
+        if (hero.gear.armor) {
+          equipArmorName.textContent = hero.gear.armor.name;
+          equipArmorBonus.textContent = `+${hero.gear.armor.defBonus} ЗАЩ, +${hero.gear.armor.hpBonus || 0} HP`;
+        }
+
+        // Рендер живого paper doll
+        paperDollContainer.innerHTML = renderPaperDoll(hero);
+
+        // Рендер Гримуара заклинаний
+        renderGrimorie();
+      }
+
+      function renderGrimorie() {
+        if (!hero.unlockedSkills) hero.unlockedSkills = ['blood_strike'];
+        modalUnlockedSkillsCounter.textContent = `${hero.unlockedSkills.length} / ${ALL_SKILLS.length}`;
+        grimorieSkillsList.innerHTML = '';
+
+        ALL_SKILLS.forEach(skill => {
+          const isUnlocked = hero.unlockedSkills.includes(skill.id);
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.alignItems = 'center';
+          row.style.justifyContent = 'space-between';
+          row.style.padding = '8px 10px';
+          row.style.background = isUnlocked ? 'rgba(30, 45, 74, 0.7)' : 'rgba(15, 23, 42, 0.6)';
+          row.style.border = isUnlocked ? '1px solid var(--biome-glow)' : '1px solid var(--border-color)';
+          row.style.borderRadius = '6px';
+          row.style.gap = '8px';
+
+          const info = document.createElement('div');
+          info.style.flex = '1';
+          info.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <strong style="color: ${isUnlocked ? '#38bdf8' : '#94a3b8'}; font-size: 12px;">${skill.name}</strong>
+              <span style="font-size: 10px; color: #a855f7;">${skill.mpCost} MP</span>
+              ${isUnlocked ? '<span style="font-size: 9px; background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 1px 5px; border-radius: 4px; font-weight: 700;">ИЗУЧЕНО</span>' : ''}
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">${skill.desc}</div>
+          `;
+          row.appendChild(info);
+
+          if (!isUnlocked) {
+            const btnLearn = document.createElement('button');
+            btnLearn.className = 'secondary-btn';
+            btnLearn.style.padding = '4px 8px';
+            btnLearn.style.fontSize = '10px';
+            btnLearn.style.whiteSpace = 'nowrap';
+            btnLearn.textContent = 'Изучить (1 SP)';
+            btnLearn.disabled = hero.skillPoints < 1;
+            btnLearn.onclick = () => {
+              if (hero.skillPoints >= 1) {
+                hero.skillPoints -= 1;
+                hero.unlockedSkills.push(skill.id);
+                soundVictory();
+                spawnFloatingText(`ИЗУЧЕНО: ${skill.name}!`, 'floating-crit');
+                updateHUD();
+                saveProgress();
+              }
+            };
+            row.appendChild(btnLearn);
+          }
+
+          grimorieSkillsList.appendChild(row);
+        });
+      }
+
+      function switchScreen(screen) {
+        document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+
+        if (screen === screenTitle || screen === screenClassSelect || screen === screenStoryIntro) {
+          mainHeroHud.style.display = 'none';
+          headerFloorBadge.style.display = 'none';
+          biomeBanner.style.display = 'none';
+          btnRestart.style.display = 'none';
+        } else {
+          mainHeroHud.style.display = 'flex';
+          headerFloorBadge.style.display = 'flex';
+          biomeBanner.style.display = 'flex';
+          btnRestart.style.display = 'flex';
+        }
+
+        // Синхронизация интенсивности музыки (спокойный эмбиент vs боевая пульсация)
+        setCombatMood(screen === screenCombat);
+
+        updateHUD();
+      }
+
+      function spawnFloatingText(text, cssClass) {
+        const span = document.createElement('span');
+        span.className = `floating-damage ${cssClass}`;
+        span.textContent = text;
+        span.style.left = `${50 + (Math.random() * 20 - 10)}%`;
+        floatingNumbers.appendChild(span);
+        setTimeout(() => span.remove(), 1200);
+      }
+
+      /* ----------------------------------------------------------------------
+         13. КАРТА ПОДЗЕМЕЛЬЯ
+         ---------------------------------------------------------------------- */
+      function updateMapModal() {
+        mapFloorNumber.textContent = hero.floor;
+        for (let i = 1; i <= 5; i++) {
+          const nodeEl = document.getElementById(`map-node-${i}`);
+          if (!nodeEl) continue;
+          nodeEl.className = 'map-node-item';
+          if (i === 5) nodeEl.classList.add('boss');
+
+          if (i < hero.room) {
+            nodeEl.classList.add('completed');
+          } else if (i === hero.room) {
+            nodeEl.classList.add('current');
+          }
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         14. ИССЛЕДОВАНИЕ И СЛУЧАЙНЫЕ СОБЫТИЯ
+         ---------------------------------------------------------------------- */
+      function renderRoomVector() {
+        const biome = getCurrentBiome(hero.floor);
+        roomVectorStage.innerHTML = `
+          <svg viewBox="0 0 200 120" width="100%" height="100%" fill="none">
+            <path d="M20 120 L20 40 Q100 0 180 40 L180 120" stroke="${biome.color}" stroke-width="2.5" fill="rgba(15, 23, 42, 0.85)"/>
+            <path d="M50 120 L50 60 Q100 25 150 60 L150 120" stroke="${biome.color}" stroke-width="1.5" stroke-dasharray="4,4"/>
+            <polygon points="80,120 120,120 115,90 85,90" fill="#182238" stroke="${biome.color}" stroke-width="1.8"/>
+            <polygon points="100,75 108,88 100,102 92,88" fill="${biome.color}" filter="drop-shadow(0 0 8px ${biome.color})"/>
+          </svg>
+        `;
+      }
+
+      function triggerRandomEvent() {
+        const ev = DUNGEON_EVENTS[Math.floor(Math.random() * DUNGEON_EVENTS.length)];
+        eventTitleText.textContent = ev.title;
+        eventDescText.textContent = ev.desc;
+        eventVectorArt.innerHTML = ev.artSvg;
+
+        eventOptionsContainer.innerHTML = '';
+        ev.options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'secondary-btn';
+          btn.style.width = '100%';
+          btn.style.padding = '10px';
+          btn.style.justifyContent = 'flex-start';
+          btn.textContent = opt.label;
+          btn.onclick = () => {
+            soundClick();
+            modalEvent.classList.remove('active');
+            handleEventAction(opt.action);
+          };
+          eventOptionsContainer.appendChild(btn);
+        });
+
+        modalEvent.classList.add('active');
+      }
+
+      function handleEventAction(act) {
+        if (act === 'sacrifice_hp') {
+          hero.hp = Math.max(1, hero.hp - 20);
+          hero.exp += 80;
+          soundHit();
+          spawnFloatingText('-20 HP / +80 EXP', 'floating-crit');
+          roomNarrative.textContent = 'Вы окропили монолит кровью. Мощь эфира наполнила разум (+80 EXP)!';
+          checkLevelUp();
+        } else if (act === 'cleanse_mp') {
+          if (hero.mp >= 15) {
+            hero.mp -= 15;
+            hero.hp = Math.min(hero.maxHp, hero.hp + 30);
+            hero.exp += 40;
+            soundSpell();
+            spawnFloatingText('+30 HP / +40 EXP', 'floating-heal');
+            roomNarrative.textContent = 'Священные руны рассеяли скверну. Алтарь озарился светом, исцелив раны!';
+          } else {
+            roomNarrative.textContent = 'Вам не хватило маны для завершения ритуала очищения.';
+          }
+        } else if (act === 'pick_lock') {
+          if (Math.random() < 0.75) {
+            const drop = rollEquipmentDrop(hero.floor) || GEAR_DROP_POOL[0];
+            equipItem(drop);
+            soundLootDrop();
+            roomNarrative.textContent = `Замок щелкнул! Внутри саркофага лежал трофей: [${drop.name}]!`;
+          } else {
+            hero.hp = Math.max(1, hero.hp - 10);
+            soundHit();
+            spawnFloatingText('-10 HP', 'floating-damage');
+            roomNarrative.textContent = 'Отмычка сломалась, а из замка вырвался газ (-10 HP)!';
+          }
+        } else if (act === 'bash_lock') {
+          hero.hp = Math.max(1, hero.hp - 15);
+          hero.gold += 35;
+          soundHit();
+          spawnFloatingText('-15 HP / +35 Золота', 'floating-damage');
+          roomNarrative.textContent = 'Вы выломали замок ударом щита (-15 HP). Добыча: 35 золотых монет!';
+        } else if (act === 'dodge_trap') {
+          if (Math.random() < 0.65) {
+            soundSpell();
+            spawnFloatingText('УКЛОНЕНИЕ!', 'floating-heal');
+            roomNarrative.textContent = 'Вы молниеносно ушли кувырком! Стальное лезвие лишь со свистом рассекло воздух.';
+          } else {
+            hero.hp = Math.max(1, hero.hp - 16);
+            soundHit();
+            spawnFloatingText('-16 HP', 'floating-damage');
+            roomNarrative.textContent = 'Вы не успели увернуться — ловушка нанесла 16 урона!';
+          }
+        } else if (act === 'shield_trap') {
+          let dmg = Math.max(3, 20 - hero.defense);
+          hero.hp = Math.max(1, hero.hp - dmg);
+          soundHit();
+          spawnFloatingText(`-${dmg} HP (Блок)`, 'floating-damage');
+          roomNarrative.textContent = `Вы выставили щит, приняв удар на сталь. Получено лишь ${dmg} урона.`;
+        } else if (act === 'drink_shrine') {
+          hero.mp = hero.maxMp;
+          soundPotion();
+          spawnFloatingText('MP ВОССТАНОВЛЕНО!', 'floating-heal');
+          roomNarrative.textContent = 'Холодное эфирное пламя наполнило ваши вены. Запас маны полностью восстановлен!';
+        } else if (act === 'bless_weapon') {
+          hero.attack += 3;
+          soundSpell();
+          spawnFloatingText('+3 АТАКА', 'floating-crit');
+          roomNarrative.textContent = 'Клинок озарился лазурным сиянием (+3 к атаке на этот этаж)!';
+        } else {
+          roomNarrative.textContent = 'Вы благоразумно обошли опасное место стороной.';
+        }
+
+        updateHUD();
+        saveProgress();
+      }
+
+      function exploreNext() {
+        soundClick();
+        hero.room += 1;
+
+        if (hero.room > 4) {
+          if (hero.floor === 10) {
+            startCombat(true);
+            return;
+          }
+          openShop();
+          return;
+        }
+
+        exploreRoomTag.textContent = `Зал ${hero.room}`;
+        exploreFloorIndicator.textContent = `Комната ${hero.room} / 4`;
+
+        if (hero.room === 3 && Math.random() < 0.75) {
+          triggerRandomEvent();
+          return;
+        }
+
+        startCombat(false);
+      }
+
+      /* ----------------------------------------------------------------------
+         15. БОЕВАЯ СИСТЕМА И ЗАКЛИНАНИЯ В БОЮ
+         ---------------------------------------------------------------------- */
+      function startCombat(isBoss) {
+        combatActive = true;
+        const tierIndex = hero.floor <= 3 ? 0 : hero.floor <= 6 ? 1 : 2;
+        const pool = MONSTERS_POOL[tierIndex];
+
+        if (isBoss) {
+          currentEnemy = {
+            modelKey: 'boss_titan',
+            name: 'Хранитель Эха Архи-Титан',
+            title: 'Владыка Первородного Кристалла',
+            hp: 360,
+            maxHp: 360,
+            atk: 48,
+            def: 24,
+            exp: 500,
+            gold: 300,
+            isBoss: true
+          };
+        } else {
+          const template = pool[Math.floor(Math.random() * pool.length)];
+          const mult = 1 + (hero.floor - 1) * 0.22;
+          currentEnemy = {
+            modelKey: template.modelKey,
+            name: template.name,
+            title: template.title,
+            hp: Math.round(template.hp * mult),
+            maxHp: Math.round(template.hp * mult),
+            atk: Math.round(template.atk * mult),
+            def: Math.round(template.def * mult),
+            exp: Math.round(template.exp * mult),
+            gold: Math.round(template.gold * mult),
+            isBoss: false
+          };
+        }
+
+        enemyName.textContent = currentEnemy.name;
+        enemyTitle.textContent = currentEnemy.title;
+        enemyBossBadge.style.display = currentEnemy.isBoss ? 'inline-block' : 'none';
+        updateEnemyHpUI();
+
+        const biome = getCurrentBiome(hero.floor);
+        const renderModel = VECTOR_MONSTERS[currentEnemy.modelKey] || VECTOR_MONSTERS.rat;
+        monsterSvgContainer.innerHTML = renderModel(biome.color);
+
+        combatLog.innerHTML = `<div class="log-entry log-event">Из полумрака появляется ${currentEnemy.name}!</div>`;
+
+        switchScreen(screenCombat);
+      }
+
+      function updateEnemyHpUI() {
+        enemyHpText.textContent = `${Math.max(0, currentEnemy.hp)} / ${currentEnemy.maxHp}`;
+        const pct = Math.max(0, Math.min(100, (currentEnemy.hp / currentEnemy.maxHp) * 100));
+        enemyHpBar.style.width = `${pct}%`;
+        setTimeout(() => { enemyHpGhost.style.width = `${pct}%`; }, 180);
+      }
+
+      function equipItem(item) {
+        if (!item || !hero.gear) return;
+        hero.gear[item.slot] = item;
+        updateHUD();
+        saveProgress();
+      }
+
+      function playerAttack() {
+        if (!combatActive || !currentEnemy) return;
+
+        let totalAtk = hero.attack;
+        if (hero.gear?.weapon) totalAtk += hero.gear.weapon.atkBonus || 0;
+
+        const critChance = hero.classId === 'rogue' ? 0.32 : 0.12;
+        const isCrit = Math.random() < critChance;
+        const critMultiplier = hero.classId === 'rogue' ? 2.2 : 1.7;
+
+        let rawDmg = isCrit ? Math.round(totalAtk * critMultiplier) : totalAtk;
+        let damage = Math.max(1, rawDmg - currentEnemy.def);
+
+        currentEnemy.hp -= damage;
+        monsterSvgContainer.classList.add('hit-shake');
+        setTimeout(() => monsterSvgContainer.classList.remove('hit-shake'), 400);
+
+        if (isCrit) {
+          soundCrit();
+          spawnFloatingText(`КРИТ -${damage}!`, 'floating-crit');
+          logCombat(`Критический выпад! Вы наносите ${currentEnemy.name} ${damage} урона!`, 'log-crit');
+        } else {
+          soundHit();
+          spawnFloatingText(`-${damage}`, 'floating-damage');
+          logCombat(`Вы наносите ${currentEnemy.name} ${damage} урона клинком.`, 'log-hero');
+        }
+
+        updateEnemyHpUI();
+
+        if (currentEnemy.hp <= 0) {
+          handleEnemyDefeat();
+        } else {
+          enemyTurn();
+        }
+      }
+
+      function openSkillsModal() {
+        soundClick();
+        combatSpellsList.innerHTML = '';
+
+        if (!hero.unlockedSkills) hero.unlockedSkills = ['blood_strike'];
+
+        // Показываем в бою ТОЛЬКО ИЗУЧЕННЫЕ заклинания!
+        const availableSkills = ALL_SKILLS.filter(s => hero.unlockedSkills.includes(s.id));
+
+        if (availableSkills.length === 0) {
+          combatSpellsList.innerHTML = '<div style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 12px;">У вас пока нет изученных заклинаний.</div>';
+        } else {
+          availableSkills.forEach(skill => {
+            const btn = document.createElement('button');
+            btn.className = 'secondary-btn';
+            btn.style.width = '100%';
+            btn.style.justifyContent = 'space-between';
+            btn.style.padding = '10px';
+            btn.innerHTML = `
+              <div style="text-align: left;">
+                <strong style="color: #f8fafc;">${skill.name}</strong>
+                <div style="font-size: 10px; color: var(--text-muted);">${skill.desc}</div>
+              </div>
+              <span style="color: var(--accent-cyan); font-weight: 800;">${skill.mpCost} MP</span>
+            `;
+            btn.disabled = hero.mp < skill.mpCost;
+            btn.onclick = () => {
+              modalCombatSpells.classList.remove('active');
+              castSkill(skill);
+            };
+            combatSpellsList.appendChild(btn);
+          });
+        }
+
+        // Показываем заблокированные с подсказкой о гримуаре
+        const lockedSkills = ALL_SKILLS.filter(s => !hero.unlockedSkills.includes(s.id));
+        if (lockedSkills.length > 0) {
+          const lockedHeader = document.createElement('div');
+          lockedHeader.style.fontSize = '11px';
+          lockedHeader.style.color = 'var(--text-dim)';
+          lockedHeader.style.marginTop = '6px';
+          lockedHeader.textContent = '🔒 Не изучено (откройте в Гримуаре персонажа за 1 SP):';
+          combatSpellsList.appendChild(lockedHeader);
+
+          lockedSkills.slice(0, 3).forEach(skill => {
+            const row = document.createElement('div');
+            row.style.fontSize = '10px';
+            row.style.color = '#64748b';
+            row.style.padding = '4px 6px';
+            row.textContent = `· ${skill.name} (${skill.mpCost} MP) — ${skill.desc}`;
+            combatSpellsList.appendChild(row);
+          });
+        }
+
+        modalCombatSpells.classList.add('active');
+      }
+
+      function castSkill(skill) {
+        if (!combatActive || hero.mp < skill.mpCost) return;
+        hero.mp -= skill.mpCost;
+        soundSpell();
+
+        let totalAtk = hero.attack;
+        if (hero.gear?.weapon) totalAtk += hero.gear.weapon.atkBonus || 0;
+
+        let dmg = 0;
+        if (skill.id === 'blood_strike') {
+          dmg = Math.max(1, Math.round(totalAtk * 1.8 - currentEnemy.def * 0.5));
+          const heal = Math.round(dmg * 0.25);
+          hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+          spawnFloatingText(`+${heal} HP`, 'floating-heal');
+          logCombat(`Удар Крови! Вы нанесли ${dmg} урона и восстановили ${heal} HP!`, 'log-heal');
+        } else if (skill.id === 'chain_lightning') {
+          dmg = Math.max(1, Math.round(totalAtk * 2.1 - currentEnemy.def * 0.2));
+          spawnFloatingText(`МОЛНИЯ -${dmg}!`, 'floating-crit');
+          logCombat(`Цепная молния пробила защиту на ${dmg} урона!`, 'log-crit');
+        } else if (skill.id === 'shadow_ambush') {
+          dmg = Math.max(1, Math.round(totalAtk * 2.3 - currentEnemy.def * 0.3));
+          spawnFloatingText(`ЗАСАДА -${dmg}!`, 'floating-crit');
+          logCombat(`Теневая Засада! Сокрушительный удар нанес ${dmg} урона!`, 'log-crit');
+        } else if (skill.id === 'frost_nova') {
+          dmg = Math.max(1, Math.round(totalAtk * 1.4 - currentEnemy.def * 0.6));
+          spawnFloatingText(`ЗАМОРОЗКА -${dmg}!`, 'floating-heal');
+          logCombat(`Ледяная Нова сковала врага льдом (-${dmg} урона)!`, 'log-hero');
+        } else if (skill.id === 'life_drain') {
+          dmg = Math.max(1, Math.round(totalAtk * 1.3 - currentEnemy.def * 0.5));
+          const heal = Math.round(dmg * 0.7);
+          hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+          spawnFloatingText(`+${heal} HP`, 'floating-heal');
+          logCombat(`Похищение Жизни нанесло ${dmg} урона и восстановило ${heal} HP!`, 'log-heal');
+        } else {
+          dmg = Math.max(1, Math.round(totalAtk * 2.0 - currentEnemy.def * 0.4));
+          spawnFloatingText(`-${dmg}`, 'floating-damage');
+          logCombat(`Заклинание поразило чудовище, нанеся ${dmg} урона!`, 'log-hero');
+        }
+
+        currentEnemy.hp -= dmg;
+        monsterSvgContainer.classList.add('hit-shake');
+        setTimeout(() => monsterSvgContainer.classList.remove('hit-shake'), 400);
+
+        updateEnemyHpUI();
+        updateHUD();
+
+        if (currentEnemy.hp <= 0) {
+          handleEnemyDefeat();
+        } else {
+          enemyTurn();
+        }
+      }
+
+      function usePotion() {
+        if (hero.potions <= 0) return;
+        hero.potions -= 1;
+        const heal = 55;
+        hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+        soundPotion();
+        spawnFloatingText(`+${heal} HP`, 'floating-heal');
+        logCombat(`Вы выпили исцеляющее зелье (+${heal} HP)!`, 'log-heal');
+        updateHUD();
+        enemyTurn();
+      }
+
+      function playerDefend() {
+        isHeroDefending = true;
+        hero.mp = Math.min(hero.maxMp, hero.mp + 10);
+        soundSpell();
+        spawnFloatingText('+10 MP (Блок)', 'floating-heal');
+        logCombat(`Вы подняли щит в глухую оборону (+10 MP)!`, 'log-hero');
+        updateHUD();
+        enemyTurn();
+      }
+
+      function enemyTurn() {
+        if (!combatActive || currentEnemy.hp <= 0) return;
+
+        setTimeout(() => {
+          let totalDef = hero.defense;
+          if (hero.gear) {
+            if (hero.gear.shield) totalDef += hero.gear.shield.defBonus || 0;
+            if (hero.gear.helmet) totalDef += hero.gear.helmet.defBonus || 0;
+            if (hero.gear.armor) totalDef += hero.gear.armor.defBonus || 0;
+          }
+
+          if (isHeroDefending) {
+            totalDef = Math.round(totalDef * 1.8) + 4;
+            isHeroDefending = false;
+          }
+
+          const rawDmg = currentEnemy.atk + Math.floor(Math.random() * 4) - 1;
+          const damage = Math.max(1, rawDmg - totalDef);
+
+          hero.hp -= damage;
+          soundHit();
+          spawnFloatingText(`-${damage}`, 'floating-damage');
+          logCombat(`${currentEnemy.name} контратакует и наносит вам ${damage} урона!`, 'log-enemy');
+          updateHUD();
+
+          if (hero.hp <= 0) {
+            handlePlayerDefeat();
+          }
+        }, 320);
+      }
+
+      function handleEnemyDefeat() {
+        combatActive = false;
+        soundVictory();
+        hero.kills += 1;
+        hero.exp += currentEnemy.exp;
+        hero.gold += currentEnemy.gold;
+
+        logCombat(`Чудовище повержено! +${currentEnemy.exp} EXP, +${currentEnemy.gold} золота.`, 'log-crit');
+
+        // Выпадение снаряжения
+        const drop = rollEquipmentDrop(hero.floor);
+        if (drop) {
+          equipItem(drop);
+          soundLootDrop();
+          spawnFloatingText(`ТРОФЕЙ: ${drop.name}!`, 'floating-drop');
+          logCombat(`С тела чудовища получен трофей: [${drop.name}]!`, 'log-drop');
+        }
+
+        checkLevelUp();
+        updateHUD();
+        saveProgress();
+
+        if (currentEnemy.isBoss) {
+          setTimeout(() => {
+            clearProgress();
+            modalVictory.classList.add('active');
+          }, 900);
+          return;
+        }
+
+        setTimeout(() => {
+          switchScreen(screenExplore);
+          roomNarrative.textContent = `Вы уничтожили врага. Путь свободен для дальнейшего исследования!`;
+          renderRoomVector();
+        }, 1100);
+      }
+
+      function handlePlayerDefeat() {
+        combatActive = false;
+        soundHit();
+        gameoverFloor.textContent = hero.floor;
+        clearProgress();
+        modalGameover.classList.add('active');
+      }
+
+      function logCombat(text, cssClass) {
+        const div = document.createElement('div');
+        div.className = `log-entry ${cssClass}`;
+        div.textContent = text;
+        combatLog.appendChild(div);
+        combatLog.scrollTop = combatLog.scrollHeight;
+      }
+
+      /* ----------------------------------------------------------------------
+         16. ЛАВКА АЛХИМИКА
+         ---------------------------------------------------------------------- */
+      function openShop() {
+        soundClick();
+        shopGoldDisplay.textContent = hero.gold;
+        shopItemsContainer.innerHTML = '';
+
+        const items = [
+          { name: 'Большое Зелье HP', desc: '+55 HP в бою', cost: 18 + hero.floor * 4, type: 'hp' },
+          { name: 'Эликсир Эфира', desc: '+35 MP в бою', cost: 16 + hero.floor * 3, type: 'mp' },
+          { name: 'Закалка Оружия', desc: '+2 к постоянной атаке', cost: 45 + hero.floor * 8, type: 'atk' },
+          { name: 'Укрепление Доспеха', desc: '+2 к постоянной защите', cost: 40 + hero.floor * 8, type: 'def' },
+          { name: 'Гримуар Таинств', desc: '+1 очко навыков (SP) для изучения магии', cost: 65 + hero.floor * 10, type: 'sp' },
+        ];
+
+        items.forEach(it => {
+          const row = document.createElement('div');
+          row.className = 'shop-item-row';
+          row.innerHTML = `
+            <div class="shop-item-info">
+              <svg class="svg-icon" viewBox="0 0 24 24" fill="var(--accent-gold)"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+              <div>
+                <div class="shop-item-title">${it.name}</div>
+                <div class="shop-item-desc">${it.desc}</div>
+              </div>
+            </div>
+            <button class="btn-buy" ${hero.gold < it.cost ? 'disabled' : ''}>
+              ${it.cost} G
+            </button>
+          `;
+
+          const buyBtn = row.querySelector('.btn-buy');
+          buyBtn.onclick = () => {
+            if (hero.gold >= it.cost) {
+              hero.gold -= it.cost;
+              soundLootDrop();
+              if (it.type === 'hp') hero.potions += 1;
+              else if (it.type === 'mp') hero.elixirs += 1;
+              else if (it.type === 'atk') hero.attack += 2;
+              else if (it.type === 'def') hero.defense += 2;
+              else if (it.type === 'sp') hero.skillPoints += 1;
+              updateHUD();
+              openShop();
+              saveProgress();
+            }
+          };
+
+          shopItemsContainer.appendChild(row);
+        });
+
+        switchScreen(screenShop);
+      }
+
+      /* ----------------------------------------------------------------------
+         17. СЛУШАТЕЛИ СОБЫТИЙ И УПРАВЛЕНИЕ
+         ---------------------------------------------------------------------- */
+      function setupEventListeners() {
+        btnSoundToggle.onclick = () => {
+          isSoundMuted = !isSoundMuted;
+          localStorage.setItem('crystal_sound_muted', isSoundMuted ? 'true' : 'false');
+          renderSoundIcon();
+          if (!isSoundMuted) initAudio();
+        };
+
+        btnMusicToggle.onclick = () => {
+          soundClick();
+          toggleMusic();
+        };
+
+        if (musicTrackPill) {
+          musicTrackPill.onclick = () => {
+            soundClick();
+            toggleMusic();
+          };
+        }
+
+        const handleFirstInteraction = () => {
+          if (!isMusicMuted && !isMusicPlaying) {
+            startBackgroundMusic();
+          }
+          window.removeEventListener('click', handleFirstInteraction);
+          window.removeEventListener('keydown', handleFirstInteraction);
+        };
+        window.addEventListener('click', handleFirstInteraction, { once: true });
+        window.addEventListener('keydown', handleFirstInteraction, { once: true });
+
+        btnRestart.onclick = () => {
+          soundClick();
+          switchScreen(screenTitle);
+        };
+
+        btnToClassSelect.onclick = () => {
+          soundClick();
+          switchScreen(screenClassSelect);
+        };
+
+        classCards.forEach(card => {
+          card.onclick = () => {
+            soundClick();
+            classCards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedClassId = card.getAttribute('data-class');
+          };
+        });
+
+        btnBackToMenu.onclick = () => {
+          soundClick();
+          switchScreen(screenTitle);
+        };
+
+        btnConfirmClass.onclick = () => {
+          soundClick();
+          const cls = HERO_CLASSES[selectedClassId] || HERO_CLASSES.warrior;
+          hero = JSON.parse(JSON.stringify(DEFAULT_HERO));
+          hero.classId = cls.id;
+          hero.hp = cls.baseHp;
+          hero.maxHp = cls.baseHp;
+          hero.mp = cls.baseMp;
+          hero.maxMp = cls.baseMp;
+          hero.attack = cls.baseAtk;
+          hero.defense = cls.baseDef;
+          hero.gear = JSON.parse(JSON.stringify(cls.starterGear));
+          // КЛЮЧЕВОЙ МОМЕНТ: открыт ТОЛЬКО один стартовый скилл этого класса!
+          hero.unlockedSkills = [...cls.starterSkills];
+          hero.skillPoints = 1;
+
+          storyClassTag.textContent = cls.title;
+          storyTitle.textContent = cls.name;
+          storyParagraphs.innerHTML = cls.introStory.map(p => `<p>${p}</p>`).join('');
+
+          switchScreen(screenStoryIntro);
+        };
+
+        btnBeginDescent.onclick = () => {
+          soundClick();
+          hero.floor = 1;
+          hero.room = 1;
+          saveProgress();
+          switchScreen(screenExplore);
+          renderRoomVector();
+        };
+
+        btnOpenMap.onclick = () => {
+          soundClick();
+          updateMapModal();
+          modalMap.classList.add('active');
+        };
+        btnCloseMapModal.onclick = () => {
+          soundClick();
+          modalMap.classList.remove('active');
+        };
+
+        btnActionForward.onclick = exploreNext;
+        btnActionChest.onclick = () => {
+          soundClick();
+          if (Math.random() < 0.6) {
+            const gold = 20 + Math.floor(Math.random() * 25);
+            hero.gold += gold;
+            soundLootDrop();
+            spawnFloatingText(`+${gold} Золота`, 'floating-drop');
+            roomNarrative.textContent = `Вы нашли старый сундук среди камней! Внутри лежало ${gold} золотых монет.`;
+          } else {
+            const drop = rollEquipmentDrop(hero.floor);
+            if (drop) {
+              equipItem(drop);
+              soundLootDrop();
+              spawnFloatingText(`ТРОФЕЙ: ${drop.name}!`, 'floating-drop');
+              roomNarrative.textContent = `В тайнике покоился древний клинок или доспех: [${drop.name}]!`;
+            } else {
+              roomNarrative.textContent = 'Тайник оказался пуст, лишь пыль и паутина осели на пальцах.';
+            }
+          }
+          updateHUD();
+          saveProgress();
+        };
+
+        btnActionRest.onclick = () => {
+          soundClick();
+          const heal = Math.round(hero.maxHp * 0.25);
+          const mana = Math.round(hero.maxMp * 0.35);
+          hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+          hero.mp = Math.min(hero.maxMp, hero.mp + mana);
+          soundPotion();
+          spawnFloatingText(`+${heal} HP / +${mana} MP`, 'floating-heal');
+          roomNarrative.textContent = 'Вы развели костер у кристального источника. Здоровье и концентрация восстановлены.';
+          updateHUD();
+          saveProgress();
+        };
+
+        btnActionShopShortcut.onclick = openShop;
+
+        btnActionHero.onclick = () => {
+          soundClick();
+          updateHeroModalData();
+          modalHero.classList.add('active');
+        };
+        btnCloseHeroModal.onclick = () => {
+          soundClick();
+          modalHero.classList.remove('active');
+        };
+
+        btnUpgradeHp.onclick = () => {
+          if (hero.statPoints > 0) {
+            hero.statPoints -= 1;
+            hero.maxHp += 15;
+            hero.hp += 15;
+            soundPotion();
+            updateHUD();
+            saveProgress();
+          }
+        };
+        btnUpgradeMp.onclick = () => {
+          if (hero.statPoints > 0) {
+            hero.statPoints -= 1;
+            hero.maxMp += 10;
+            hero.mp += 10;
+            soundPotion();
+            updateHUD();
+            saveProgress();
+          }
+        };
+        btnUpgradeAtk.onclick = () => {
+          if (hero.statPoints > 0) {
+            hero.statPoints -= 1;
+            hero.attack += 2;
+            soundCrit();
+            updateHUD();
+            saveProgress();
+          }
+        };
+        btnUpgradeDef.onclick = () => {
+          if (hero.statPoints > 0) {
+            hero.statPoints -= 1;
+            hero.defense += 1;
+            soundSpell();
+            updateHUD();
+            saveProgress();
+          }
+        };
+
+        btnUsePotionInventory.onclick = () => {
+          if (hero.potions > 0 && hero.hp < hero.maxHp) {
+            hero.potions -= 1;
+            hero.hp = Math.min(hero.maxHp, hero.hp + 50);
+            soundPotion();
+            updateHUD();
+            saveProgress();
+          }
+        };
+        btnUseElixirInventory.onclick = () => {
+          if (hero.elixirs > 0 && hero.mp < hero.maxMp) {
+            hero.elixirs -= 1;
+            hero.mp = Math.min(hero.maxMp, hero.mp + 30);
+            soundPotion();
+            updateHUD();
+            saveProgress();
+          }
+        };
+
+        btnCombatAttack.onclick = playerAttack;
+        btnCombatSkillsMenu.onclick = openSkillsModal;
+        btnCombatHeal.onclick = usePotion;
+        btnCombatDefend.onclick = playerDefend;
+
+        btnCloseSpellsModal.onclick = () => {
+          soundClick();
+          modalCombatSpells.classList.remove('active');
+        };
+
+        btnLeaveShop.onclick = () => {
+          soundClick();
+          hero.floor += 1;
+          hero.room = 1;
+          saveProgress();
+          switchScreen(screenExplore);
+          renderRoomVector();
+        };
+
+        btnOpenHelp.onclick = () => {
+          soundClick();
+          modalHelp.classList.add('active');
+        };
+        btnCloseHelpModal.onclick = () => {
+          soundClick();
+          modalHelp.classList.remove('active');
+        };
+
+        btnGameoverRestart.onclick = () => {
+          soundClick();
+          modalGameover.classList.remove('active');
+          switchScreen(screenClassSelect);
+        };
+        btnVictoryRestart.onclick = () => {
+          soundClick();
+          modalVictory.classList.remove('active');
+          switchScreen(screenTitle);
+        };
+
+        const saved = loadProgress();
+        if (saved) {
+          btnContinueGame.style.display = 'flex';
+          continueFloorText.textContent = `${saved.floor} этаж, ${HERO_CLASSES[saved.classId]?.name || 'Герой'}`;
+          btnContinueGame.onclick = () => {
+            soundClick();
+            hero = saved;
+            // Убеждаемся что unlockedSkills существует
+            if (!hero.unlockedSkills) {
+              const cls = HERO_CLASSES[hero.classId] || HERO_CLASSES.warrior;
+              hero.unlockedSkills = [...cls.starterSkills];
+            }
+            switchScreen(screenExplore);
+            renderRoomVector();
+          };
+        }
+
+        window.addEventListener('keydown', (e) => {
+          if (modalHero.classList.contains('active') || modalMap.classList.contains('active') || modalEvent.classList.contains('active') || modalCombatSpells.classList.contains('active')) {
+            if (e.key === 'Escape') {
+              modalHero.classList.remove('active');
+              modalMap.classList.remove('active');
+              modalEvent.classList.remove('active');
+              modalCombatSpells.classList.remove('active');
+              modalHelp.classList.remove('active');
+            }
+            return;
+          }
+
+          if (screenCombat.classList.contains('active')) {
+            if (e.key === '1' || e.code === 'Space') playerAttack();
+            else if (e.key === '2') openSkillsModal();
+            else if (e.key === '3') usePotion();
+            else if (e.key === '4') playerDefend();
+          } else if (screenExplore.classList.contains('active')) {
+            if (e.key === '1' || e.code === 'Space') exploreNext();
+            else if (e.key === '2') btnActionChest.click();
+            else if (e.key === '3') btnActionRest.click();
+            else if (e.key === '4') btnActionShopShortcut.click();
+            else if (e.key === '5' || e.key.toLowerCase() === 'i') btnActionHero.click();
+          }
+        });
+      }
+
+      /* ----------------------------------------------------------------------
+         18. ДИНАМИЧЕСКИЙ CANVAS ЧАСТИЦ (ПОДСТРАИВАЕТСЯ ПОД БИОМ)
+         ---------------------------------------------------------------------- */
+      function initAmbientCanvas() {
+        const canvas = document.getElementById('ambient-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        });
+
+        const particles = [];
+        for (let i = 0; i < 35; i++) {
+          particles.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            r: Math.random() * 2 + 0.8,
+            vy: -(Math.random() * 0.5 + 0.15),
+            vx: Math.random() * 0.3 - 0.15,
+            alpha: Math.random() * 0.45 + 0.1
+          });
+        }
+
+        function loop() {
+          ctx.clearRect(0, 0, width, height);
+          const biome = getCurrentBiome(hero.floor);
+          ctx.fillStyle = biome.particleColor || '#06b6d4';
+
+          for (let p of particles) {
+            p.y += p.vy;
+            p.x += p.vx;
+            if (p.y < 0) {
+              p.y = height;
+              p.x = Math.random() * width;
+            }
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          requestAnimationFrame(loop);
+        }
+        loop();
+      }
+
+      // Запуск игры
+      renderSoundIcon();
+      renderMusicIcon();
+      setupEventListeners();
+      initAmbientCanvas();
+    })();
+  </script>
+</body>
+</html>

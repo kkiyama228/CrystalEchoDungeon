@@ -1,0 +1,8 @@
+{
+  "name": "Dungeon Chronicles: Crystal Echo",
+  "description": "Полноценная темная фэнтези мини-RPG игра: исследуйте подземелье, сражайтесь с монстрами, прокачивайте героя и победите кристального босса на 10-м этаже.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
